@@ -301,10 +301,38 @@ HTML-mockupia varten priorisointi:
 
 ---
 
-## 14. Seuraavat askeleet
+## 14. Kehitysideat (V2+)
 
-1. [ ] Kayda PRD lapi asiakkaan kanssa, keraa palaute
+### 14.1 Datan kerays ja lahteet
+
+- **Kuntapaatokset**: Tampereen kaupungin esityslistat ja poytakirjat automaattisesti parseroidaan — nama ovat edunvalvonnalle kultaa, koska ne tulevat usein ennen mediaa
+- **Lakihankkeet (lausuntokierrokset)**: lausuntopalvelu.fi -integraatio — halytys kun uusi lausuntopyynto liittyy edunvalvonnan aiheisiin, ja deadline-muistutus
+- **Hankeikkuna**: Valtioneuvoston hankeikkuna-API seuraamaan saadosvalmisteluhankkeiden etenemista
+- **Podcast-transkriptiot**: Politiikka- ja talouspodcastien automaattinen transkriptointi ja analyysi (esim. Politiikkaradio, Taloussanomat-podcast)
+- **Kilpailevat kauppakamarit**: Mita muut kauppakamarit viestivat samoista aiheista — benchmarking
+
+### 14.2 AI-ominaisuudet
+
+- **Vaikuttavuusanalyysi**: Seuraa miten kauppakamarin omat kannanotot ja tiedotteet vaikuttavat mediakeskusteluun — nakyykö kauppakamarin viesti myohemmin median uutisoinnissa tai poliitikkojen puheissa
+- **Vastine-generaattori**: AI laatii vastineluonnoksen suoraan mediahittiin pohjautuen — osaa viitata kauppakamarin aiempiin kannanottoihin ja dataan
+- **Aihe-ennusteet**: Ennakoi tulevia aiheita eduskunnan kalenterin, EU:n lainsaadantoaikataulujen ja hallitusohjelman perusteella — "ensi viikolla kasittelyssa X, valmistaudu"
+- **Argumenttipankki**: AI kokoaa ja yllapitaa aihealueittain parhaita argumentteja, tilastoja ja esimerkkeja joita edunvalvonnassa voi kayttaa
+- **Media-briefing aamulla**: Automaattinen aamubrief sahkopostiin tai Teamsiin klo 7 — tiivistelma yon tapahtumista + paivan odotettavissa olevat aiheet
+
+### 14.3 Toiminnallisuudet
+
+- **Reagointiputki**: Mediaosumasta suoraan tyonkulkuun — "Laadi kannanotto" → AI-luonnos → hyvaksynta → julkaisu kauppakamarin kanavissa
+- **Sidosryhmakartta**: Kuka paattaa mistakin — kansanedustajat valiokunnittain, ministerit vastuualueineen, virkahenkilot. Kun aihe nousee, nayttaa suoraan keihin pitaisi olla yhteydessa
+- **Kampanjaseuranta**: Jos kauppakamari ajaa tiettya asiaa (esim. raitiotien rahoitus), oma dashboard-nakyma joka seuraa kampanjan etenemista, mediapeittoa ja vaikuttavuutta
+- **Vertailukaupungit**: Miten Tampere nakyy suhteessa Turkuun, Ouluun, Lahteen — kilpailevien alueiden elinvoimakeskustelu
+- **Jasenyritysten mediaseuranta**: Lisapalveluna kauppakamarin jasenyrityksille oma mediaseurantanakyma — lisaarvoa jasenyydelle
+
+---
+
+## 15. Seuraavat askeleet
+
+1. [x] Kayda PRD lapi asiakkaan kanssa, keraa palaute
 2. [ ] Priorisoi ominaisuudet MVP:ta varten
-3. [ ] Rakenna HTML-mockup P1-ominaisuuksilla
+3. [x] Rakenna HTML-mockup P1-ominaisuuksilla
 4. [ ] Esittely Tampereen Kauppakamarille
 5. [ ] Teknisen toteutuksen suunnittelu
