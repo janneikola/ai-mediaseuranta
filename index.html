@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mediaseuranta — Tampereen Kauppakamari</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        serif: ['Instrument Serif', 'Georgia', 'serif'],
+        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      colors: {
+        base: { 50:'#f0f4f8', 100:'#d9e2ec', 200:'#bcccdc', 300:'#9fb3c8', 400:'#829ab1', 500:'#627d98', 600:'#486581', 700:'#334e68', 800:'#243b53', 900:'#102a43', 950:'#0a1929' },
+        accent: { 400:'#60a5fa', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8' },
+        crit: { 500:'#ef4444', 600:'#dc2626' },
+        warn: { 500:'#f59e0b', 600:'#d97706' },
+        ok: { 500:'#10b981', 600:'#059669' },
+      }
+    }
+  }
+}
+</script>
+<style>
+  :root {
+    --bg-primary: #0a1929;
+    --bg-secondary: #102a43;
+    --bg-card: #163050;
+    --bg-card-hover: #1a3a5c;
+    --border: #243b5360;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #334e6880; border-radius: 3px; }
+  .score-ring { position: relative; flex-shrink: 0; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .score-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 500;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideIn { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes pulse-glow { 0%,100% { box-shadow:0 0 8px #ef444440; } 50% { box-shadow:0 0 20px #ef444460; } }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  .animate-fade-up { animation: fadeUp 0.5s ease-out both; }
+  .animate-slide-in { animation: slideIn 0.4s ease-out both; }
+  .pulse-critical { animation: pulse-glow 2s ease-in-out infinite; }
+  .stagger-1{animation-delay:.05s}.stagger-2{animation-delay:.1s}.stagger-3{animation-delay:.15s}.stagger-4{animation-delay:.2s}.stagger-5{animation-delay:.25s}.stagger-6{animation-delay:.3s}.stagger-7{animation-delay:.35s}.stagger-8{animation-delay:.4s}.stagger-9{animation-delay:.45s}.stagger-10{animation-delay:.5s}
+
+  .tab-btn {
+    position: relative; padding: 10px 18px; font-size: 13px; font-weight: 500;
+    color: #94a3b8; background: transparent; border: none; cursor: pointer;
+    transition: all 0.25s; white-space: nowrap; letter-spacing: 0.02em;
+  }
+  .tab-btn:hover { color: #e2e8f0; }
+  .tab-btn.active { color: #60a5fa; }
+  .tab-btn.active::after {
+    content: ''; position: absolute; bottom: -1px; left: 18px; right: 18px;
+    height: 2px; background: #3b82f6; border-radius: 1px;
+  }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; transition: all 0.2s;
+  }
+  .card:hover { background: var(--bg-card-hover); border-color: #334e6880; }
+  .sent-pos { color: #10b981; }
+  .sent-neg { color: #ef4444; }
+  .sent-neu { color: #f59e0b; }
+  .tag-pill {
+    display: inline-flex; align-items: center; padding: 2px 10px;
+    font-size: 11px; font-weight: 500; border-radius: 100px; letter-spacing: 0.03em;
+  }
+  .chat-user { background: #1e3a5f; border-radius: 16px 16px 4px 16px; margin-left: auto; }
+  .chat-ai { background: #163050; border: 1px solid #243b5360; border-radius: 16px 16px 16px 4px; margin-right: auto; }
+  .trend-up { color: #10b981; }
+  .trend-down { color: #ef4444; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .spark-bar {
+    display: inline-block; width: 4px; border-radius: 2px;
+    background: #3b82f6; vertical-align: bottom; margin-right: 2px;
+  }
+  .alert-level-bar { width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; }
+  .network-node { transition: transform 0.2s; }
+  .network-node:hover { transform: scale(1.15); }
+  .section-title { font-family: 'Instrument Serif', serif; font-size: 22px; color: #e2e8f0; }
+  .hero-stat { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 500; line-height: 1; }
+  .action-btn {
+    padding: 4px 8px; font-size: 11px; border-radius: 6px;
+    background: #243b5360; color: #94a3b8; border: 1px solid transparent;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .action-btn:hover { background: #334e6860; color: #e2e8f0; border-color: #486581; }
+  .critical-banner {
+    background: linear-gradient(90deg, #7f1d1d20, #991b1b10, transparent);
+    border-left: 3px solid #ef4444;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Top bar -->
+<header class="sticky top-0 z-50 border-b" style="background:rgba(10,25,41,0.92);backdrop-filter:blur(16px);border-color:var(--border);">
+  <div class="max-w-[1440px] mx-auto px-6 flex items-center justify-between h-14">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-500 to-accent-700 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M2 12h4l3-9 4 18 3-9h4"/><circle cx="19" cy="12" r="2"/></svg>
+      </div>
+      <span class="font-serif text-lg tracking-tight">Mediaseuranta</span>
+      <span class="text-xs text-base-400 ml-1 hidden sm:inline">Tampereen Kauppakamari</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="text-xs font-mono text-base-400">5.3.2026</span>
+      <div class="flex items-center gap-2 text-xs text-base-400">
+        <span class="w-2 h-2 rounded-full bg-ok-500 inline-block" style="animation:blink 2s infinite;"></span>
+        Live
+      </div>
+      <div class="w-8 h-8 rounded-full bg-base-700 flex items-center justify-center text-xs font-medium text-base-300">JK</div>
+    </div>
+  </div>
+</header>
+
+<!-- Critical alert banner -->
+<div id="criticalBanner" class="critical-banner pulse-critical">
+  <div class="max-w-[1440px] mx-auto px-6 py-3 flex items-center gap-3">
+    <span class="w-2 h-2 rounded-full bg-crit-500 flex-shrink-0" style="animation:blink 1s infinite;"></span>
+    <span class="text-sm font-medium text-crit-500">KRIITTINEN</span>
+    <span class="text-sm text-base-200">Hallitus esittaa yritysverotuksen kiristamista — edellyttaa valitonta reagointia</span>
+    <span class="text-xs text-base-400 ml-auto hidden sm:inline">12 min sitten</span>
+    <button class="action-btn ml-2 text-crit-500" onclick="document.getElementById('criticalBanner').style.display='none'">Sulje</button>
+  </div>
+</div>
+
+<!-- Tab navigation -->
+<nav class="border-b sticky top-14 z-40" style="background:rgba(10,25,41,0.92);backdrop-filter:blur(16px);border-color:var(--border);">
+  <div class="max-w-[1440px] mx-auto px-6 flex gap-1 overflow-x-auto">
+    <button class="tab-btn active" data-tab="dashboard">Paanakyma</button>
+    <button class="tab-btn" data-tab="topics">Aiheet</button>
+    <button class="tab-btn" data-tab="people">Henkilot</button>
+    <button class="tab-btn" data-tab="reports">Raportit</button>
+    <button class="tab-btn" data-tab="alerts">Halytykset <span class="w-5 h-5 rounded-full bg-crit-500 text-white text-[10px] font-bold inline-flex items-center justify-center ml-1">3</span></button>
+    <button class="tab-btn" data-tab="chat">AI-assistentti</button>
+  </div>
+</nav>
+
+<main class="max-w-[1440px] mx-auto px-6 py-6" id="mainContent">
+</main>
+
+<script>
+// ==================== DATA ====================
+const mediaHits = [
+  { id:1, title:"Hallitus esittaa yritysverotuksen kiristamista — yhteisovero nousisi 22 prosenttiin", source:"Helsingin Sanomat", time:"12 min sitten", score:91, sentiment:"neg", tags:["Yritysverotus","Hallitus"], level:"critical" },
+  { id:2, title:"Tampereen raitiotien 3. vaiheen rahoitus etenee valtioneuvostossa", source:"Aamulehti", time:"43 min sitten", score:84, sentiment:"pos", tags:["Raitiotie","Infra"], level:"important" },
+  { id:3, title:"IT-alan tyovoimapula karjistyy Pirkanmaalla — yritykset vaativat nopeampia tyolupaprosesseja", source:"Kauppalehti", time:"1 t sitten", score:78, sentiment:"neg", tags:["Tyovoima","IT-ala"], level:"important" },
+  { id:4, title:"EU:n tekoalysaantely vaikuttaa suoraan Tampereen teknologiayrityksiin", source:"Yle", time:"1,5 t sitten", score:75, sentiment:"neg", tags:["EU-saantely","Teknologia"], level:"important" },
+  { id:5, title:"Tampereen elinvoima vertailussa: kolmanneksi paras kaupunki Suomessa", source:"Aamulehti", time:"2 t sitten", score:72, sentiment:"pos", tags:["Elinvoima","Tampere"], level:"normal" },
+  { id:6, title:"EK vaatii hallitukselta vaikutusarviointia ennen veropaatoksia", source:"Kauppalehti", time:"2,5 t sitten", score:88, sentiment:"neg", tags:["Yritysverotus","EK"], level:"critical" },
+  { id:7, title:"Keskuskauppakamarin paaekonomisti: 'Verotuksen kiristaminen on myrkkya kasvulle'", source:"LinkedIn", time:"3 t sitten", score:82, sentiment:"neg", tags:["Yritysverotus","Kannanotto"], level:"important" },
+  { id:8, title:"Tampereen yliopiston ja yritysten yhteistyo tuottaa tulosta — uusi innovaatiokeskus avataan", source:"Aamulehti", time:"3,5 t sitten", score:61, sentiment:"pos", tags:["Koulutus","Innovaatio"], level:"normal" },
+  { id:9, title:"Energiayhtioiden investoinnit Pirkanmaalla kasvaneet 40%", source:"Yle", time:"4 t sitten", score:58, sentiment:"pos", tags:["Energia","Investoinnit"], level:"normal" },
+  { id:10, title:"Kaavoituskiista Tampereen keskustassa — yritysten tilantarve huolettaa", source:"Tamperelainen", time:"5 t sitten", score:52, sentiment:"neg", tags:["Kaavoitus","Tampere"], level:"normal" },
+];
+
+const trends = [
+  { topic:"Yritysverotus", hits:23, change:"+340%", direction:"up", color:"#ef4444" },
+  { topic:"Raitiotie", hits:18, change:"+45%", direction:"up", color:"#3b82f6" },
+  { topic:"Tyovoima", hits:15, change:"+12%", direction:"up", color:"#f59e0b" },
+  { topic:"EU-saantely", hits:10, change:"+85%", direction:"up", color:"#10b981" },
+  { topic:"Energia", hits:7, change:"-5%", direction:"down", color:"#8b5cf6" },
+  { topic:"Kaavoitus", hits:5, change:"-18%", direction:"down", color:"#627d98" },
+  { topic:"Koulutus", hits:4, change:"+8%", direction:"up", color:"#06b6d4" },
+];
+
+const topicsList = [
+  { name:"Yritysverotus", hits:23, score:91, color:"#ef4444" },
+  { name:"Raitiotie", hits:18, score:84, color:"#3b82f6" },
+  { name:"Tyovoima", hits:15, score:78, color:"#f59e0b" },
+  { name:"EU-saantely", hits:10, score:75, color:"#10b981" },
+  { name:"Energia", hits:7, score:58, color:"#8b5cf6" },
+  { name:"Kaavoitus", hits:5, score:52, color:"#627d98" },
+  { name:"Koulutus", hits:4, score:61, color:"#06b6d4" },
+];
+
+const people = [
+  { name:"Riikka Purra", role:"Valtiovarainministeri", org:"Perussuomalaiset", mentions:8, topics:["Yritysverotus","Budjetti"], sentiment:"neg", initials:"RP" },
+  { name:"Juhana Vartiainen", role:"Kansanedustaja", org:"Kokoomus", mentions:5, topics:["Yritysverotus","Kilpailukyky"], sentiment:"pos", initials:"JV" },
+  { name:"Minna Leinonen", role:"Johtaja", org:"EK", mentions:4, topics:["Yritysverotus","Tyovoima"], sentiment:"neg", initials:"ML" },
+  { name:"Karoliina Laurila", role:"Toimitusjohtaja", org:"Tampereen Kauppakamari", mentions:3, topics:["Raitiotie","Elinvoima"], sentiment:"pos", initials:"KL" },
+  { name:"Lauri Lyly", role:"Pormestari", org:"Tampereen kaupunki", mentions:6, topics:["Raitiotie","Kaavoitus"], sentiment:"pos", initials:"LL" },
+  { name:"Anna-Kaisa Heikkinen", role:"Kansanedustaja", org:"Keskusta", mentions:3, topics:["Yritysverotus","Energia"], sentiment:"neg", initials:"AH" },
+  { name:"Mikko Salminen", role:"Toimitusjohtaja", org:"Vincit Oyj", mentions:4, topics:["Tyovoima","IT-ala"], sentiment:"neg", initials:"MS" },
+  { name:"Heli Jarvinen", role:"Toimittaja", org:"Aamulehti", mentions:7, topics:["Raitiotie","Elinvoima"], sentiment:"neu", initials:"HJ" },
+  { name:"Petri Virtanen", role:"Professori", org:"Tampereen yliopisto", mentions:2, topics:["Koulutus","Innovaatio"], sentiment:"pos", initials:"PV" },
+];
+
+const alerts = [
+  { title:"Hallitus esittaa yritysverotuksen kiristamista", source:"Helsingin Sanomat", score:91, time:"12 min sitten", level:"critical" },
+  { title:"EK vaatii vaikutusarviointia — kriittinen kannanotto", source:"Kauppalehti", score:88, time:"2,5 t sitten", level:"critical" },
+  { title:"Keskuskauppakamari: veronkiristys 'myrkkya kasvulle'", source:"LinkedIn", score:86, time:"3 t sitten", level:"critical" },
+  { title:"Raitiotien rahoituspaatos etenee valtioneuvostossa", source:"Aamulehti", score:84, time:"43 min sitten", level:"important" },
+  { title:"IT-alan tyovoimapula karjistyy Pirkanmaalla", source:"Kauppalehti", score:78, time:"1 t sitten", level:"important" },
+  { title:"EU:n tekoalysaantely vaikuttaa Tampereen yrityksiin", source:"Yle", score:75, time:"1,5 t sitten", level:"important" },
+  { title:"Tampereen elinvoima: kolmanneksi paras Suomessa", source:"Aamulehti", score:72, time:"2 t sitten", level:"important" },
+  { title:"Pirkanmaan tyolupaprosessit liian hitaat — yrittajien avoin kirje", source:"X.com", score:70, time:"4 t sitten", level:"important" },
+  { title:"Tampereen yliopisto avaa uuden innovaatiokeskuksen", source:"Aamulehti", score:61, time:"3,5 t sitten", level:"normal" },
+  { title:"Energiainvestoinnit kasvussa Pirkanmaalla", source:"Yle", score:58, time:"4 t sitten", level:"normal" },
+  { title:"Tampereen keskustan kaavoitusmuutos etenee", source:"Tamperelainen", score:52, time:"5 t sitten", level:"normal" },
+  { title:"Ammatillisen koulutuksen aloituspaikat lisaantyivat", source:"Yle", score:48, time:"6 t sitten", level:"normal" },
+  { title:"Sahkon hinta vakaana alkuvuonna", source:"Kauppalehti", score:35, time:"6 t sitten", level:"low" },
+  { title:"Tampereen bussiliikenteen reittimuutokset", source:"Aamulehti", score:28, time:"8 t sitten", level:"low" },
+  { title:"EU-rahoitushaku aukeaa ensi viikolla", source:"Valtioneuvosto", score:32, time:"eilen", level:"low" },
+];
+
+// ==================== HELPERS ====================
+function scoreColor(score) {
+  if (score >= 85) return '#ef4444';
+  if (score >= 65) return '#f59e0b';
+  if (score >= 40) return '#3b82f6';
+  return '#627d98';
+}
+
+function sentimentLabel(s) {
+  if (s === 'pos') return '<span class="sent-pos text-xs">&#9650; Positiivinen</span>';
+  if (s === 'neg') return '<span class="sent-neg text-xs">&#9660; Negatiivinen</span>';
+  return '<span class="sent-neu text-xs">&#9679; Neutraali</span>';
+}
+
+function scoreRingSvg(score, size) {
+  size = size || 48;
+  var color = scoreColor(score);
+  var r = (size / 2) - 4;
+  var circ = 2 * Math.PI * r;
+  var offset = circ - (score / 100) * circ;
+  return '<div class="score-ring" style="width:' + size + 'px;height:' + size + 'px;">' +
+    '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
+    '<circle cx="' + (size/2) + '" cy="' + (size/2) + '" r="' + r + '" fill="none" stroke="#243b5340" stroke-width="3"/>' +
+    '<circle cx="' + (size/2) + '" cy="' + (size/2) + '" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-dasharray="' + circ + '" stroke-dashoffset="' + offset + '" stroke-linecap="round"/>' +
+    '</svg>' +
+    '<span class="score-text" style="color:' + color + '">' + score + '</span>' +
+    '</div>';
+}
+
+function escapeHtml(text) {
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.textContent;
+}
+
+function sparkBars(count) {
+  var bars = '';
+  for (var i = 0; i < count; i++) {
+    var h = Math.max(15, Math.random() * 100);
+    bars += '<span class="spark-bar" style="height:' + h + '%;opacity:' + (0.4 + h/200) + ';flex:1;"></span>';
+  }
+  return bars;
+}
+
+// ==================== DOM BUILDING ====================
+function buildElement(tag, attrs, children) {
+  var el = document.createElement(tag);
+  if (attrs) {
+    Object.keys(attrs).forEach(function(key) {
+      if (key === 'className') el.className = attrs[key];
+      else if (key === 'style' && typeof attrs[key] === 'string') el.setAttribute('style', attrs[key]);
+      else if (key.startsWith('on')) el[key] = attrs[key];
+      else el.setAttribute(key, attrs[key]);
+    });
+  }
+  if (children) {
+    if (typeof children === 'string') {
+      el.textContent = children;
+    } else if (Array.isArray(children)) {
+      children.forEach(function(child) {
+        if (child) {
+          if (typeof child === 'string') el.appendChild(document.createTextNode(child));
+          else el.appendChild(child);
+        }
+      });
+    } else {
+      el.appendChild(children);
+    }
+  }
+  return el;
+}
+
+// For safe HTML insertion of SVG-heavy content (static mock data only)
+function setStaticContent(el, html) {
+  // All data in this file is hardcoded mock data - no user input
+  el.insertAdjacentHTML('beforeend', html);
+}
+
+// ==================== RENDER ====================
+
+function renderDashboard() {
+  var container = document.createElement('div');
+  container.id = 'view-dashboard';
+  container.className = 'view active';
+
+  // AI Summary
+  var summaryHtml = '<div class="card p-5 mb-6 animate-fade-up" style="background:linear-gradient(135deg,#163050,#1a3a5c);">' +
+    '<div class="flex items-start gap-3 mb-3">' +
+    '<div class="w-8 h-8 rounded-lg bg-accent-600/20 flex items-center justify-center flex-shrink-0 mt-0.5">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>' +
+    '<div><h2 class="text-sm font-semibold text-accent-400 mb-2 tracking-wide uppercase" style="font-size:11px;letter-spacing:0.08em;">AI-yhteenveto &middot; 5.3.2026</h2>' +
+    '<p class="text-sm text-base-200 leading-relaxed">Hallitus julkaisi tanaan esityksen yritysverotuksen kiristamisesta, mika on herattanyt laajaa kritiikkia elinkeinoelamassa. Tampereen raitiotien kolmannen vaiheen rahoituspaatos etenee valtioneuvostossa — paatos odotetaan ensi viikolla. LinkedIn-keskusteluissa tyovoimapula IT-alalla nousee jalleen vahvasti esiin pirkanmaalaisten yritysten keskuudessa. EU:n uusi tekoalysaantelyesitys vaikuttaa suoraan alueen teknologiayrityksiin. Aamulehti julkaisi laajan juttukokonaisuuden Tampereen elinvoimasta vertailussa muihin kaupunkeihin.</p>' +
+    '</div></div></div>';
+
+  // Stats row
+  var statsHtml = '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
+    '<div class="card p-4 animate-fade-up stagger-1"><p class="text-xs text-base-400 mb-1">Osumat tanaan</p>' +
+    '<div class="flex items-end gap-3"><span class="hero-stat text-base-100">47</span><span class="text-xs text-ok-500 font-medium mb-1">+12%</span></div>' +
+    '<div class="mt-3 h-6 flex items-end">' +
+    '<span class="spark-bar" style="height:40%"></span><span class="spark-bar" style="height:55%"></span><span class="spark-bar" style="height:30%"></span>' +
+    '<span class="spark-bar" style="height:65%"></span><span class="spark-bar" style="height:45%"></span><span class="spark-bar" style="height:80%"></span>' +
+    '<span class="spark-bar" style="height:70%"></span><span class="spark-bar" style="height:60%"></span><span class="spark-bar" style="height:90%"></span>' +
+    '<span class="spark-bar" style="height:75%"></span><span class="spark-bar" style="height:100%;background:#60a5fa"></span>' +
+    '</div></div>' +
+    '<div class="card p-4 animate-fade-up stagger-2"><p class="text-xs text-base-400 mb-1">Kriittiset</p>' +
+    '<div class="flex items-end gap-3"><span class="hero-stat text-crit-500">3</span><span class="text-xs text-crit-500 font-medium mb-1">+2</span></div>' +
+    '<p class="text-xs text-base-500 mt-3">Vaatii valitonta huomiota</p></div>' +
+    '<div class="card p-4 animate-fade-up stagger-3"><p class="text-xs text-base-400 mb-1">Seurattavat aiheet</p>' +
+    '<div class="flex items-end gap-3"><span class="hero-stat text-base-100">7</span></div>' +
+    '<p class="text-xs text-base-500 mt-3">2 nousevaa trendia</p></div>' +
+    '<div class="card p-4 animate-fade-up stagger-4"><p class="text-xs text-base-400 mb-1">Sentimentti</p>' +
+    '<div class="flex items-end gap-3"><span class="hero-stat sent-neg">&minus;12%</span></div>' +
+    '<p class="text-xs text-base-500 mt-3">Negatiivisempi kuin eilen</p></div></div>';
+
+  // Hits list
+  var hitsHtml = '';
+  mediaHits.forEach(function(h, i) {
+    var tagsStr = h.tags.map(function(t) { return '<span class="tag-pill bg-base-800 text-base-400" style="font-size:10px;">' + escapeHtml(t) + '</span>'; }).join('');
+    hitsHtml += '<div class="card p-4 flex items-start gap-4 animate-fade-up stagger-' + (i+1) + '" style="cursor:pointer;">' +
+      scoreRingSvg(h.score, 48) +
+      '<div class="flex-1 min-w-0">' +
+      '<p class="text-sm font-medium text-base-100 mb-1 leading-snug">' + escapeHtml(h.title) + '</p>' +
+      '<div class="flex items-center gap-3 flex-wrap">' +
+      '<span class="text-xs text-base-500">' + escapeHtml(h.source) + '</span>' +
+      '<span class="text-xs text-base-600">&middot;</span>' +
+      '<span class="text-xs text-base-500">' + escapeHtml(h.time) + '</span>' +
+      '<span class="text-xs text-base-600">&middot;</span>' +
+      sentimentLabel(h.sentiment) +
+      '</div><div class="flex items-center gap-2 mt-2">' + tagsStr + '</div></div>' +
+      '<div class="flex gap-1 flex-shrink-0">' +
+      '<button class="action-btn" title="Avaa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg></button>' +
+      '<button class="action-btn" title="Jaa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>' +
+      '<button class="action-btn" title="Merkitse luetuksi"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></button>' +
+      '</div></div>';
+  });
+
+  // Trends
+  var trendsHtml = '';
+  trends.forEach(function(t) {
+    var arrow = t.direction === 'up' ? '&#8593;' : '&#8595;';
+    var cls = t.direction === 'up' ? 'trend-up' : 'trend-down';
+    trendsHtml += '<div class="card p-3 flex items-center gap-3" style="cursor:pointer;">' +
+      '<div class="w-1 self-stretch rounded-full" style="background:' + t.color + ';"></div>' +
+      '<div class="flex-1 min-w-0"><p class="text-sm font-medium">' + escapeHtml(t.topic) + '</p>' +
+      '<p class="text-xs text-base-500">' + t.hits + ' osumaa talla viikolla</p></div>' +
+      '<div class="text-right"><span class="text-xs font-mono ' + cls + '">' + arrow + ' ' + t.change + '</span></div></div>';
+  });
+
+  // Activity chart
+  var activityHtml = '<div class="card p-4 mt-4">' +
+    '<h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Osumat per tunti (tanaan)</h4>' +
+    '<div class="flex items-end gap-1 h-20">' +
+    '<div class="flex-1 rounded-t" style="height:20%;background:#1e3a5f;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:10%;background:#1e3a5f;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:5%;background:#1e3a5f;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:8%;background:#1e3a5f;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:15%;background:#1e3a5f;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:35%;background:#243b53;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:55%;background:#243b53;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:70%;background:#2563eb;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:85%;background:#2563eb;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:65%;background:#2563eb;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:90%;background:#3b82f6;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:100%;background:#60a5fa;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:75%;background:#3b82f6;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:50%;background:#2563eb;border:1px dashed #60a5fa50;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:40%;background:#1e3a5f;border:1px dashed #60a5fa30;"></div>' +
+    '<div class="flex-1 rounded-t" style="height:30%;background:#1e3a5f;border:1px dashed #60a5fa30;"></div>' +
+    '</div><div class="flex justify-between mt-2 text-[10px] text-base-500"><span>00</span><span>06</span><span>12</span><span>18</span><span>nyt</span></div></div>';
+
+  // Source distribution
+  var sourcesData = [
+    {name:"Aamulehti", w:"35%", c:"#3b82f6", n:12},
+    {name:"Helsingin Sanomat", w:"25%", c:"#3b82f6", n:8},
+    {name:"Yle", w:"20%", c:"#3b82f6", n:7},
+    {name:"LinkedIn", w:"18%", c:"#60a5fa", n:6},
+    {name:"X.com", w:"12%", c:"#627d98", n:5},
+    {name:"Kauppalehti", w:"10%", c:"#2563eb", n:4},
+    {name:"Eduskunta", w:"8%", c:"#f59e0b", n:3},
+    {name:"Valtioneuvosto", w:"5%", c:"#d97706", n:2}
+  ];
+  var sourcesHtml = '<div class="card p-4 mt-3"><h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Lahteet tanaan</h4><div class="space-y-2">';
+  sourcesData.forEach(function(s) {
+    sourcesHtml += '<div class="flex items-center gap-2 text-xs">' +
+      '<span class="text-base-300 w-24 truncate">' + escapeHtml(s.name) + '</span>' +
+      '<div class="flex-1 h-2 rounded-full bg-base-800 overflow-hidden"><div class="h-full rounded-full" style="width:' + s.w + ';background:' + s.c + '"></div></div>' +
+      '<span class="text-base-400 font-mono w-6 text-right">' + s.n + '</span></div>';
+  });
+  sourcesHtml += '</div></div>';
+
+  // Combine
+  var fullHtml = summaryHtml + statsHtml +
+    '<div class="grid lg:grid-cols-3 gap-6">' +
+    '<div class="lg:col-span-2">' +
+    '<div class="flex items-center justify-between mb-4"><h3 class="section-title">Tarkeimmat mediaosumat</h3>' +
+    '<div class="flex gap-2"><select class="action-btn text-xs" style="background:var(--bg-card);"><option>Kaikki lahteet</option><option>Verkkolehdet</option><option>Sosiaalinen media</option></select>' +
+    '<select class="action-btn text-xs" style="background:var(--bg-card);"><option>Kaikki aiheet</option><option>Yritysverotus</option><option>Tyovoima</option></select></div></div>' +
+    '<div class="space-y-2">' + hitsHtml + '</div></div>' +
+    '<div><h3 class="section-title mb-4">Trendit</h3><div class="space-y-3">' + trendsHtml + '</div>' +
+    activityHtml + sourcesHtml + '</div></div>';
+
+  setStaticContent(container, fullHtml);
+  return container;
+}
+
+function renderTopics() {
+  var container = document.createElement('div');
+  container.id = 'view-topics';
+  container.className = 'view';
+
+  // Topic selector
+  var selectorHtml = '';
+  topicsList.forEach(function(t, i) {
+    var ringCls = i === 0 ? ' ring-1 ring-accent-500/50' : '';
+    selectorHtml += '<div class="card p-3 flex items-center gap-3 cursor-pointer' + ringCls + '">' +
+      '<div class="w-1 self-stretch rounded-full" style="background:' + t.color + ';"></div>' +
+      '<div class="flex-1 min-w-0"><p class="text-sm font-medium">' + escapeHtml(t.name) + '</p>' +
+      '<p class="text-xs text-base-500">' + t.hits + ' osumaa</p></div>' +
+      scoreRingSvg(t.score, 36) + '</div>';
+  });
+
+  // Topic detail
+  var detailHtml = '<div class="card p-5 mb-5" style="background:linear-gradient(135deg,#163050,#1a3a5c);">' +
+    '<div class="flex items-start gap-3">' +
+    '<div class="w-8 h-8 rounded-lg bg-accent-600/20 flex items-center justify-center flex-shrink-0">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>' +
+    '<div><h2 class="font-serif text-xl mb-2">Yritysverotus</h2>' +
+    '<p class="text-sm text-base-300 leading-relaxed">Yritysverotus on noussut kuuman keskustelun aiheeksi hallituksen esitettya verotuksen kiristamista. Elinkeinoelamä on reagoinut voimakkaasti — EK ja Keskuskauppakamari ovat julkaisseet kriittiset kannanotot. Pirkanmaan yritysten nakokulmasta muutos vaikuttaisi erityisesti kasvuyrityksiin ja teknologia-alan toimijoihin.</p></div></div></div>';
+
+  // Sentiment chart
+  var sentimentSvg = '<svg viewBox="0 0 400 120" class="w-full">' +
+    '<line x1="40" y1="20" x2="390" y2="20" stroke="#243b53" stroke-width="1"/>' +
+    '<line x1="40" y1="60" x2="390" y2="60" stroke="#243b5380" stroke-width="1" stroke-dasharray="4"/>' +
+    '<line x1="40" y1="100" x2="390" y2="100" stroke="#243b53" stroke-width="1"/>' +
+    '<text x="10" y="24" fill="#627d98" font-size="9" font-family="JetBrains Mono">+</text>' +
+    '<text x="10" y="64" fill="#627d98" font-size="9" font-family="JetBrains Mono">0</text>' +
+    '<text x="10" y="104" fill="#627d98" font-size="9" font-family="JetBrains Mono">&minus;</text>' +
+    '<polyline points="40,50 65,55 90,45 115,48 140,52 165,55 190,60 215,58 240,65 265,70 290,72 315,78 340,85 365,90 390,92" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<defs><linearGradient id="sentGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#ef444400"/></linearGradient></defs>' +
+    '<polyline points="40,50 65,55 90,45 115,48 140,52 165,55 190,60 215,58 240,65 265,70 290,72 315,78 340,85 365,90 390,92 390,100 40,100" fill="url(#sentGrad)" opacity="0.3"/>' +
+    '<text x="40" y="115" fill="#627d98" font-size="8" font-family="DM Sans">4.2.</text>' +
+    '<text x="140" y="115" fill="#627d98" font-size="8" font-family="DM Sans">14.2.</text>' +
+    '<text x="240" y="115" fill="#627d98" font-size="8" font-family="DM Sans">24.2.</text>' +
+    '<text x="350" y="115" fill="#627d98" font-size="8" font-family="DM Sans">5.3.</text></svg>';
+
+  // Key people
+  var keyPeople = [
+    {init:"RP", name:"Riikka Purra", desc:"Valtiovarainministeri &middot; 8 mainintaa", tag:"Kriittinen", tagCls:"bg-crit-500/15 text-crit-500"},
+    {init:"JV", name:"Juhana Vartiainen", desc:"Kansanedustaja &middot; 5 mainintaa", tag:"Aktiivinen", tagCls:"bg-warn-500/15 text-warn-500"},
+    {init:"ML", name:"Minna Leinonen", desc:"EK, johtaja &middot; 4 mainintaa", tag:"Kommentoija", tagCls:"bg-accent-500/15 text-accent-400"},
+    {init:"KL", name:"Karoliina Laurila", desc:"Tampereen Kauppakamari &middot; 3 mainintaa", tag:"Puolustaja", tagCls:"bg-ok-500/15 text-ok-500"}
+  ];
+  var peopleSectionHtml = '<div class="space-y-3">';
+  keyPeople.forEach(function(p) {
+    peopleSectionHtml += '<div class="flex items-center gap-3">' +
+      '<div class="w-9 h-9 rounded-full bg-base-700 flex items-center justify-center text-xs font-medium text-base-300">' + p.init + '</div>' +
+      '<div class="flex-1 min-w-0"><p class="text-sm font-medium">' + p.name + '</p><p class="text-xs text-base-500">' + p.desc + '</p></div>' +
+      '<span class="tag-pill ' + p.tagCls + '">' + p.tag + '</span></div>';
+  });
+  peopleSectionHtml += '</div>';
+
+  // Related topics
+  var relatedTopics = ["Yhteisoverotus","Paaomaoverotus","Budjetti 2027","Kilpailukyky","Investoinnit","Startup-ekosysteemi"];
+  var relatedHtml = '<div class="card p-4 mb-5"><h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Liittyvat aiheet</h4><div class="flex flex-wrap gap-2">';
+  relatedTopics.forEach(function(t) {
+    relatedHtml += '<span class="tag-pill bg-base-800 text-base-300 cursor-pointer hover:bg-base-700">' + escapeHtml(t) + '</span>';
+  });
+  relatedHtml += '</div></div>';
+
+  // Timeline hits
+  var timelineItems = [
+    { title:"Hallitus esittaa yritysverotuksen kiristamista", source:"Helsingin Sanomat", time:"12 min sitten", score:91, sentiment:"neg" },
+    { title:"EK vaatii vaikutusarviointia ennen veropaatoksia", source:"Kauppalehti", time:"2,5 t sitten", score:88, sentiment:"neg" },
+    { title:"Keskuskauppakamarin paaekonomisti: veronkiristys on myrkkya kasvulle", source:"LinkedIn", time:"3 t sitten", score:82, sentiment:"neg" },
+    { title:"Oppositio vaatii vaikutusarviointia verotusesityksesta", source:"Eduskunta", time:"eilen", score:68, sentiment:"neg" },
+    { title:"Pirkanmaan yrittajat: veronkorotus pysayttaa investoinnit", source:"X.com", time:"eilen", score:65, sentiment:"neg" },
+    { title:"Valtiovarainministerio julkaisi veroesityksen taustamuistion", source:"Valtioneuvosto", time:"2 pv sitten", score:72, sentiment:"neu" },
+  ];
+  var timelineHtml = '<h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Aikajana</h4><div class="space-y-2">';
+  timelineItems.forEach(function(h, i) {
+    timelineHtml += '<div class="card p-3 flex items-center gap-3 animate-slide-in" style="animation-delay:' + (i*0.05) + 's;">' +
+      scoreRingSvg(h.score, 36) +
+      '<div class="flex-1 min-w-0"><p class="text-sm font-medium leading-snug">' + escapeHtml(h.title) + '</p>' +
+      '<div class="flex items-center gap-2 mt-1"><span class="text-xs text-base-500">' + escapeHtml(h.source) + '</span>' +
+      '<span class="text-xs text-base-600">&middot;</span><span class="text-xs text-base-500">' + escapeHtml(h.time) + '</span>' +
+      '<span class="text-xs text-base-600">&middot;</span>' + sentimentLabel(h.sentiment) + '</div></div></div>';
+  });
+  timelineHtml += '</div>';
+
+  var fullHtml = '<div class="grid lg:grid-cols-4 gap-6">' +
+    '<div><h3 class="section-title mb-4">Aiheet</h3><div class="space-y-2">' + selectorHtml + '</div></div>' +
+    '<div class="lg:col-span-3">' + detailHtml +
+    '<div class="grid md:grid-cols-2 gap-5 mb-5">' +
+    '<div class="card p-4"><h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Sentimentti (30 pv)</h4>' + sentimentSvg +
+    '<p class="text-xs text-base-500 mt-2">Sentimentti laskenut merkittavasti hallituksen esityksen jalkeen</p></div>' +
+    '<div class="card p-4"><h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Avainhenkilot aiheessa</h4>' + peopleSectionHtml + '</div></div>' +
+    relatedHtml + timelineHtml + '</div></div>';
+
+  setStaticContent(container, fullHtml);
+  return container;
+}
+
+function renderPeople() {
+  var container = document.createElement('div');
+  container.id = 'view-people';
+  container.className = 'view';
+
+  var filterHtml = '<h3 class="section-title mb-5">Henkilot &amp; organisaatiot</h3>' +
+    '<div class="flex gap-2 mb-5">' +
+    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer">Kaikki</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Poliitikot</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Yritysjohtajat</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Organisaatiot</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Media</button></div>';
+
+  var gridHtml = '<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">';
+  people.forEach(function(p, i) {
+    var tagsStr = p.topics.map(function(t) { return '<span class="tag-pill bg-base-800 text-base-400" style="font-size:10px;">' + escapeHtml(t) + '</span>'; }).join('');
+    gridHtml += '<div class="card p-4 animate-fade-up stagger-' + ((i%10)+1) + '">' +
+      '<div class="flex items-start gap-3 mb-3">' +
+      '<div class="w-11 h-11 rounded-full bg-base-700 flex items-center justify-center text-sm font-semibold text-base-300 flex-shrink-0">' + escapeHtml(p.initials) + '</div>' +
+      '<div class="flex-1 min-w-0"><p class="text-sm font-semibold">' + escapeHtml(p.name) + '</p>' +
+      '<p class="text-xs text-base-500">' + escapeHtml(p.role) + '</p>' +
+      '<p class="text-xs text-base-500">' + escapeHtml(p.org) + '</p></div></div>' +
+      '<div class="flex items-center justify-between mb-3">' +
+      '<span class="text-xs text-base-400">' + p.mentions + ' mainintaa talla viikolla</span>' +
+      sentimentLabel(p.sentiment) + '</div>' +
+      '<div class="flex flex-wrap gap-1.5">' + tagsStr + '</div>' +
+      '<div class="mt-3 pt-3 border-t flex gap-3" style="border-color:var(--border);">' +
+      '<div class="flex items-end gap-0.5 flex-1 h-6">' + sparkBars(7) + '</div>' +
+      '<span class="text-[10px] text-base-500 self-end">7 pv</span></div></div>';
+  });
+  gridHtml += '</div>';
+
+  // Network visualization
+  var networkHtml = '<div class="card p-5 mt-6">' +
+    '<h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Verkostokartta — Yritysverotuskeskustelu</h4>' +
+    '<svg viewBox="0 0 800 350" class="w-full">' +
+    '<circle cx="400" cy="175" r="150" fill="none" stroke="#243b5330" stroke-width="1"/>' +
+    '<circle cx="400" cy="175" r="100" fill="none" stroke="#243b5320" stroke-width="1"/>' +
+    '<circle cx="400" cy="175" r="50" fill="none" stroke="#243b5310" stroke-width="1"/>' +
+    '<line x1="400" y1="175" x2="280" y2="100" stroke="#3b82f630" stroke-width="1.5"/>' +
+    '<line x1="400" y1="175" x2="520" y2="90" stroke="#3b82f630" stroke-width="1.5"/>' +
+    '<line x1="400" y1="175" x2="550" y2="220" stroke="#3b82f625" stroke-width="1"/>' +
+    '<line x1="400" y1="175" x2="250" y2="230" stroke="#3b82f625" stroke-width="1"/>' +
+    '<line x1="400" y1="175" x2="350" y2="290" stroke="#3b82f620" stroke-width="1"/>' +
+    '<line x1="400" y1="175" x2="500" y2="300" stroke="#3b82f620" stroke-width="1"/>' +
+    '<line x1="400" y1="175" x2="180" y2="160" stroke="#3b82f630" stroke-width="1.5"/>' +
+    '<line x1="400" y1="175" x2="620" y2="160" stroke="#3b82f625" stroke-width="1"/>' +
+    '<line x1="280" y1="100" x2="520" y2="90" stroke="#ef444420" stroke-width="1"/>' +
+    '<line x1="280" y1="100" x2="180" y2="160" stroke="#10b98120" stroke-width="1"/>' +
+    '<line x1="250" y1="230" x2="350" y2="290" stroke="#f59e0b20" stroke-width="1"/>' +
+    '<circle cx="400" cy="175" r="24" fill="#1d4ed8" stroke="#60a5fa" stroke-width="2" class="network-node" style="cursor:pointer"/>' +
+    '<text x="400" y="178" text-anchor="middle" fill="white" font-size="9" font-family="DM Sans" font-weight="600">Verotus</text>' +
+    '<circle cx="280" cy="100" r="18" fill="#163050" stroke="#ef4444" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
+    '<text x="280" y="103" text-anchor="middle" fill="#e2e8f0" font-size="8" font-family="DM Sans">Purra</text>' +
+    '<circle cx="520" cy="90" r="16" fill="#163050" stroke="#f59e0b" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
+    '<text x="520" y="93" text-anchor="middle" fill="#e2e8f0" font-size="8" font-family="DM Sans">Vartiainen</text>' +
+    '<circle cx="180" cy="160" r="17" fill="#163050" stroke="#3b82f6" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
+    '<text x="180" y="163" text-anchor="middle" fill="#e2e8f0" font-size="8" font-family="DM Sans">EK</text>' +
+    '<circle cx="620" cy="160" r="15" fill="#163050" stroke="#3b82f6" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
+    '<text x="620" y="163" text-anchor="middle" fill="#e2e8f0" font-size="8" font-family="DM Sans">KKamari</text>' +
+    '<circle cx="550" cy="220" r="14" fill="#163050" stroke="#10b981" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
+    '<text x="550" y="223" text-anchor="middle" fill="#e2e8f0" font-size="7" font-family="DM Sans">Leinonen</text>' +
+    '<circle cx="250" cy="230" r="14" fill="#163050" stroke="#10b981" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
+    '<text x="250" y="233" text-anchor="middle" fill="#e2e8f0" font-size="7" font-family="DM Sans">Laurila</text>' +
+    '<circle cx="350" cy="290" r="12" fill="#163050" stroke="#627d98" stroke-width="1" class="network-node" style="cursor:pointer"/>' +
+    '<text x="350" y="293" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans">Yle</text>' +
+    '<circle cx="500" cy="300" r="12" fill="#163050" stroke="#627d98" stroke-width="1" class="network-node" style="cursor:pointer"/>' +
+    '<text x="500" y="303" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans">HS</text>' +
+    '</svg></div>';
+
+  setStaticContent(container, filterHtml + gridHtml + networkHtml);
+  return container;
+}
+
+function renderReports() {
+  var container = document.createElement('div');
+  container.id = 'view-reports';
+  container.className = 'view';
+
+  var html = '<div class="flex items-center justify-between mb-5">' +
+    '<h3 class="section-title">Raportit</h3>' +
+    '<div class="flex gap-2">' +
+    '<button class="action-btn flex items-center gap-1.5"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Lataa PDF</button>' +
+    '<button class="action-btn flex items-center gap-1.5"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Lataa PPTX</button></div></div>' +
+
+    '<div class="flex gap-2 mb-5">' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Paivaraportti</button>' +
+    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer">Viikkoraportti</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Kuukausiraportti</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Kvartaaliraportti</button></div>' +
+
+    // Weekly report
+    '<div class="card p-6 mb-6" style="background:linear-gradient(135deg,#163050,#1a3a5c);">' +
+    '<div class="flex items-center gap-2 mb-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>' +
+    '<span class="text-sm font-semibold text-accent-400 uppercase tracking-wider" style="font-size:11px;">Viikkoraportti &middot; VKO 10 / 2026</span></div>' +
+    '<h2 class="font-serif text-2xl mb-4">Viikon mediakatsaus</h2>' +
+    '<div class="text-sm text-base-300 leading-relaxed space-y-3">' +
+    '<p>Viikon merkittavin mediatapahtuma oli hallituksen esitys yritysverotuksen kiristamisesta, joka kerasi 23 mediaosumaa ja heratti laajaa keskustelua niin perinteisessa kuin sosiaalisessa mediassa. Tampereen Kauppakamari reagoi kannanotolla, joka sai nakyvyytta Aamulehdessa ja Kauppalehdessa.</p>' +
+    '<p>Raitiotien kolmannen vaiheen rahoituskeskustelu jatkui aktiivisena. Valtioneuvosto ilmoitti kasittelevansa asiaa ensi viikolla, mika lisasi media-aktiivisuutta erityisesti paikallismedioissa.</p>' +
+    '<p>Tyovoimapula-aihe pysyi tasaisena — IT-alan osaajapula ja maahanmuuttopolitiikka nousivat esiin useissa yhteyksisså. EU:n tekoalysaantelyn vaikutukset alkoivat nakyä myos kotimaisessa keskustelussa.</p></div></div>' +
+
+    // Charts
+    '<div class="grid md:grid-cols-2 gap-5 mb-6">' +
+    '<div class="card p-4"><h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Osumien kehitys (kuukausi)</h4>' +
+    '<svg viewBox="0 0 400 140" class="w-full">' +
+    '<line x1="30" y1="20" x2="390" y2="20" stroke="#243b5330" stroke-width="1"/>' +
+    '<line x1="30" y1="50" x2="390" y2="50" stroke="#243b5320" stroke-width="1" stroke-dasharray="3"/>' +
+    '<line x1="30" y1="80" x2="390" y2="80" stroke="#243b5320" stroke-width="1" stroke-dasharray="3"/>' +
+    '<line x1="30" y1="110" x2="390" y2="110" stroke="#243b5330" stroke-width="1"/>' +
+    '<text x="5" y="24" fill="#627d98" font-size="8" font-family="JetBrains Mono">60</text>' +
+    '<text x="5" y="54" fill="#627d98" font-size="8" font-family="JetBrains Mono">40</text>' +
+    '<text x="5" y="84" fill="#627d98" font-size="8" font-family="JetBrains Mono">20</text>' +
+    '<text x="5" y="114" fill="#627d98" font-size="8" font-family="JetBrains Mono">0</text>' +
+    '<rect x="50" y="55" width="30" height="55" rx="3" fill="#1e3a5f"/>' +
+    '<rect x="100" y="40" width="30" height="70" rx="3" fill="#243b53"/>' +
+    '<rect x="150" y="50" width="30" height="60" rx="3" fill="#243b53"/>' +
+    '<rect x="200" y="35" width="30" height="75" rx="3" fill="#2563eb"/>' +
+    '<rect x="250" y="25" width="30" height="85" rx="3" fill="#3b82f6"/>' +
+    '<text x="55" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK6</text>' +
+    '<text x="105" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK7</text>' +
+    '<text x="155" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK8</text>' +
+    '<text x="205" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK9</text>' +
+    '<text x="250" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK10</text></svg></div>' +
+
+    '<div class="card p-4"><h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Aihejakauma (kuukausi)</h4>' +
+    '<svg viewBox="0 0 400 140" class="w-full">' +
+    '<text x="5" y="28" fill="#94a3b8" font-size="9" font-family="DM Sans">Verotus</text>' +
+    '<rect x="90" y="18" width="180" height="16" rx="3" fill="#ef4444" opacity="0.7"/>' +
+    '<text x="275" y="29" fill="#627d98" font-size="9" font-family="JetBrains Mono">23</text>' +
+    '<text x="5" y="52" fill="#94a3b8" font-size="9" font-family="DM Sans">Raitiotie</text>' +
+    '<rect x="90" y="42" width="140" height="16" rx="3" fill="#3b82f6" opacity="0.7"/>' +
+    '<text x="235" y="53" fill="#627d98" font-size="9" font-family="JetBrains Mono">18</text>' +
+    '<text x="5" y="76" fill="#94a3b8" font-size="9" font-family="DM Sans">Tyovoima</text>' +
+    '<rect x="90" y="66" width="120" height="16" rx="3" fill="#f59e0b" opacity="0.7"/>' +
+    '<text x="215" y="77" fill="#627d98" font-size="9" font-family="JetBrains Mono">15</text>' +
+    '<text x="5" y="100" fill="#94a3b8" font-size="9" font-family="DM Sans">EU-saantely</text>' +
+    '<rect x="90" y="90" width="80" height="16" rx="3" fill="#10b981" opacity="0.7"/>' +
+    '<text x="175" y="101" fill="#627d98" font-size="9" font-family="JetBrains Mono">10</text>' +
+    '<text x="5" y="124" fill="#94a3b8" font-size="9" font-family="DM Sans">Energia</text>' +
+    '<rect x="90" y="114" width="55" height="16" rx="3" fill="#8b5cf6" opacity="0.7"/>' +
+    '<text x="150" y="125" fill="#627d98" font-size="9" font-family="JetBrains Mono">7</text></svg></div></div>' +
+
+    // Metrics table
+    '<div class="card overflow-hidden"><table class="w-full text-sm">' +
+    '<thead><tr class="text-xs text-base-400 uppercase tracking-wider border-b" style="border-color:var(--border);">' +
+    '<th class="text-left py-3 px-4 font-medium">Mittari</th>' +
+    '<th class="text-right py-3 px-4 font-medium">Tama viikko</th>' +
+    '<th class="text-right py-3 px-4 font-medium">Edellinen</th>' +
+    '<th class="text-right py-3 px-4 font-medium">Muutos</th></tr></thead>' +
+    '<tbody class="text-base-300">' +
+    '<tr class="border-b" style="border-color:var(--border);"><td class="py-3 px-4">Mediaosumat yhteensa</td><td class="py-3 px-4 text-right font-mono">247</td><td class="py-3 px-4 text-right font-mono text-base-500">198</td><td class="py-3 px-4 text-right font-mono text-ok-500">+24.7%</td></tr>' +
+    '<tr class="border-b" style="border-color:var(--border);"><td class="py-3 px-4">Kriittiset halytykset</td><td class="py-3 px-4 text-right font-mono">7</td><td class="py-3 px-4 text-right font-mono text-base-500">3</td><td class="py-3 px-4 text-right font-mono text-crit-500">+133%</td></tr>' +
+    '<tr class="border-b" style="border-color:var(--border);"><td class="py-3 px-4">Keskimaarainen relevanssi</td><td class="py-3 px-4 text-right font-mono">68</td><td class="py-3 px-4 text-right font-mono text-base-500">62</td><td class="py-3 px-4 text-right font-mono text-ok-500">+9.7%</td></tr>' +
+    '<tr class="border-b" style="border-color:var(--border);"><td class="py-3 px-4">Uniikit lahteet</td><td class="py-3 px-4 text-right font-mono">14</td><td class="py-3 px-4 text-right font-mono text-base-500">12</td><td class="py-3 px-4 text-right font-mono text-ok-500">+16.7%</td></tr>' +
+    '<tr><td class="py-3 px-4">Sentimentti (keskiarvo)</td><td class="py-3 px-4 text-right font-mono">&minus;0.18</td><td class="py-3 px-4 text-right font-mono text-base-500">+0.05</td><td class="py-3 px-4 text-right font-mono text-crit-500">&minus;460%</td></tr>' +
+    '</tbody></table></div>';
+
+  setStaticContent(container, html);
+  return container;
+}
+
+function renderAlerts() {
+  var container = document.createElement('div');
+  container.id = 'view-alerts';
+  container.className = 'view';
+
+  var levelConfig = {
+    critical: { color:'#ef4444', bg:'rgba(239,68,68,0.08)', label:'Kriittinen', border:'#ef444440' },
+    important: { color:'#f59e0b', bg:'rgba(245,158,11,0.06)', label:'Tarkea', border:'#f59e0b30' },
+    normal: { color:'#3b82f6', bg:'rgba(59,130,246,0.06)', label:'Normaali', border:'#3b82f620' },
+    low: { color:'#627d98', bg:'transparent', label:'Matala', border:'#627d9815' }
+  };
+
+  var html = '<div class="flex items-center justify-between mb-5">' +
+    '<h3 class="section-title">Halytykset</h3>' +
+    '<div class="flex gap-2">' +
+    '<button class="tag-pill bg-crit-500/20 text-crit-500 cursor-pointer">Kriittinen <span class="ml-1 font-mono">3</span></button>' +
+    '<button class="tag-pill bg-warn-500/20 text-warn-500 cursor-pointer">Tarkea <span class="ml-1 font-mono">5</span></button>' +
+    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer">Normaali <span class="ml-1 font-mono">12</span></button>' +
+    '<button class="tag-pill bg-base-600/20 text-base-400 cursor-pointer">Matala <span class="ml-1 font-mono">27</span></button></div></div>' +
+    '<div class="space-y-2">';
+
+  alerts.forEach(function(a, i) {
+    var cfg = levelConfig[a.level];
+    html += '<div class="card flex items-stretch gap-0 overflow-hidden animate-slide-in" style="animation-delay:' + (i*0.04) + 's;background:' + cfg.bg + ';border-color:' + cfg.border + ';">' +
+      '<div class="alert-level-bar" style="background:' + cfg.color + ';"></div>' +
+      '<div class="flex items-center gap-4 p-4 flex-1 min-w-0">' +
+      scoreRingSvg(a.score, 40) +
+      '<div class="flex-1 min-w-0"><p class="text-sm font-medium leading-snug">' + escapeHtml(a.title) + '</p>' +
+      '<div class="flex items-center gap-2 mt-1">' +
+      '<span class="text-xs" style="color:' + cfg.color + ';">' + cfg.label + '</span>' +
+      '<span class="text-xs text-base-600">&middot;</span>' +
+      '<span class="text-xs text-base-500">' + escapeHtml(a.source) + '</span>' +
+      '<span class="text-xs text-base-600">&middot;</span>' +
+      '<span class="text-xs text-base-500">' + escapeHtml(a.time) + '</span></div></div>' +
+      '<div class="flex gap-1 flex-shrink-0"><button class="action-btn">Avaa</button><button class="action-btn">Hylkaa</button></div></div></div>';
+  });
+  html += '</div>';
+
+  setStaticContent(container, html);
+  return container;
+}
+
+function renderChat() {
+  var container = document.createElement('div');
+  container.id = 'view-chat';
+  container.className = 'view';
+
+  var html = '<div class="max-w-3xl mx-auto">' +
+    '<div class="text-center mb-8 pt-4">' +
+    '<div class="w-12 h-12 rounded-xl bg-accent-600/20 flex items-center justify-center mx-auto mb-3">' +
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>' +
+    '<h3 class="font-serif text-2xl mb-1">AI-assistentti</h3>' +
+    '<p class="text-sm text-base-400">Kysy mediaseurannan datasta mita tahansa</p></div>' +
+
+    '<div class="space-y-4 mb-6">' +
+
+    // User message 1
+    '<div class="chat-user max-w-lg p-4"><p class="text-sm">Tiivista viime viikon tapahtumat koskien yritysverotusta.</p></div>' +
+
+    // AI response 1
+    '<div class="chat-ai max-w-2xl p-4">' +
+    '<p class="text-sm text-base-300 leading-relaxed mb-3">Viime viikolla yritysverotus nousi mediaseurannan selvasti suurimmaksi aiheeksi <span class="font-mono text-accent-400">23 osumalla</span>. Tarkeimmat tapahtumat:</p>' +
+    '<div class="text-sm text-base-300 leading-relaxed space-y-2">' +
+    '<p>1. <strong>Hallituksen esitys</strong> (ti 3.3.) — Valtiovarainministerio julkaisi esityksen yhteisoveron korottamisesta 22%:iin. Uutisoi HS, Yle, Kauppalehti.</p>' +
+    '<p>2. <strong>EK:n kannanotto</strong> (ke 4.3.) — Elinkeinoelamän keskusliitto julkaisi kriittisen lausunnon. Leviaminen: 8 mediaa + 15 LinkedIn-jakoa.</p>' +
+    '<p>3. <strong>Kauppakamarin reaktio</strong> (to 5.3.) — Tampereen Kauppakamari julkaisi oman kannanottonsa korostaen vaikutuksia Pirkanmaan yrityksiin.</p></div>' +
+    '<p class="text-sm text-base-300 mt-3">Sentimentti on <span class="text-crit-500 font-medium">vahvasti negatiivinen</span> (&minus;0.72) elinkeinoelamän nakokulmasta. Suosittelen kannanottojen jatkamista.</p></div>' +
+
+    // User message 2
+    '<div class="chat-user max-w-lg p-4"><p class="text-sm">Keta kansanedustajia kannattaa kontaktoida tassa asiassa?</p></div>' +
+
+    // AI response 2
+    '<div class="chat-ai max-w-2xl p-4">' +
+    '<p class="text-sm text-base-300 leading-relaxed mb-3">Mediaseurannan perusteella suosittelen kontaktointia seuraaviin kansanedustajiin:</p>' +
+    '<div class="space-y-3 mt-3">' +
+    '<div class="flex items-start gap-3 bg-base-900/30 rounded-lg p-3"><div class="w-8 h-8 rounded-full bg-base-700 flex items-center justify-center text-xs font-medium text-base-300 flex-shrink-0">JV</div>' +
+    '<div><p class="text-sm font-medium">Juhana Vartiainen (Kok)</p><p class="text-xs text-base-400">5 mainintaa talla viikolla &middot; Kriittinen hallituksen esitysta kohtaan</p></div></div>' +
+    '<div class="flex items-start gap-3 bg-base-900/30 rounded-lg p-3"><div class="w-8 h-8 rounded-full bg-base-700 flex items-center justify-center text-xs font-medium text-base-300 flex-shrink-0">AH</div>' +
+    '<div><p class="text-sm font-medium">Anna-Kaisa Heikkinen (Kesk)</p><p class="text-xs text-base-400">3 mainintaa &middot; Pirkanmaan kansanedustaja</p></div></div>' +
+    '<div class="flex items-start gap-3 bg-base-900/30 rounded-lg p-3"><div class="w-8 h-8 rounded-full bg-base-700 flex items-center justify-center text-xs font-medium text-base-300 flex-shrink-0">MS</div>' +
+    '<div><p class="text-sm font-medium">Matias Suominen (SDP)</p><p class="text-xs text-base-400">2 mainintaa &middot; Valtiovarainvaliokunnan jasen</p></div></div></div></div>' +
+
+    // User message 3
+    '<div class="chat-user max-w-lg p-4"><p class="text-sm">Laadi lyhyt kannanottoluonnos, joka korostaa vaikutuksia Pirkanmaan pk-yrityksiin.</p></div>' +
+
+    // AI response 3
+    '<div class="chat-ai max-w-2xl p-4">' +
+    '<p class="text-sm text-base-300 leading-relaxed mb-2"><strong>Luonnos — Tampereen Kauppakamarin kannanotto</strong></p>' +
+    '<div class="bg-base-900/40 rounded-lg p-4 text-sm text-base-300 leading-relaxed border-l-2 border-accent-500">' +
+    '<p class="mb-2"><em>"Hallituksen esitys yritysverotuksen kiristamisesta uhkaa heikentaa Pirkanmaan pk-yritysten kasvuedellytyksia juuri kun talous on kaantymassa nousuun.</em></p>' +
+    '<p class="mb-2"><em>Pirkanmaalla toimii yli 30 000 yritysta, joista valtaosa on pienia ja keskisuuria. Verotuksen kiristaminen vahentaa naiden yritysten investointikykya ja hidastaa uusien tyopaikkojen syntymista alueelle.</em></p>' +
+    '<p><em>Tampereen Kauppakamari vaatii kattavaa vaikutusarviointia ennen paatoksentekoa ja esittaa siirtymaaikaa mahdollisille muutoksille."</em></p></div>' +
+    '<p class="text-xs text-base-500 mt-3">Perustuu mediaseurannan dataan ja EK:n kannanottoon.</p></div>' +
+
+    '</div>' +
+
+    // Chat input
+    '<div class="sticky bottom-6">' +
+    '<div class="card p-2 flex items-center gap-2" style="background:rgba(22,48,80,0.95);backdrop-filter:blur(12px);">' +
+    '<input type="text" placeholder="Kysy mediaseurannan datasta..." class="flex-1 bg-transparent text-sm text-base-200 px-3 py-2.5 outline-none placeholder-base-500">' +
+    '<button class="w-9 h-9 rounded-lg bg-accent-600 hover:bg-accent-700 flex items-center justify-center transition-colors flex-shrink-0">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>' +
+    '<div class="flex gap-2 mt-2 justify-center">' +
+    '<button class="action-btn text-[11px]">Viikon yhteenveto</button>' +
+    '<button class="action-btn text-[11px]">Nousevat aiheet</button>' +
+    '<button class="action-btn text-[11px]">Reagointisuositukset</button>' +
+    '<button class="action-btn text-[11px]">Laadi kannanotto</button></div></div></div>';
+
+  setStaticContent(container, html);
+  return container;
+}
+
+// ==================== INIT ====================
+var main = document.getElementById('mainContent');
+main.appendChild(renderDashboard());
+main.appendChild(renderTopics());
+main.appendChild(renderPeople());
+main.appendChild(renderReports());
+main.appendChild(renderAlerts());
+main.appendChild(renderChat());
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var tab = this.getAttribute('data-tab');
+    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('view-' + tab).classList.add('active');
+    this.classList.add('active');
+    window.scrollTo(0, 0);
+  });
+});
+</script>
+</body>
+</html>
