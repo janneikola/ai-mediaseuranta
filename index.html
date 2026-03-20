@@ -168,8 +168,7 @@ tailwind.config = {
     <button class="tab-btn active" data-tab="dashboard">Päänäkymä</button>
     <button class="tab-btn" data-tab="topics">Aiheet</button>
     <button class="tab-btn" data-tab="people">Henkilöt</button>
-    <button class="tab-btn" data-tab="reports">Raportit</button>
-    <button class="tab-btn" data-tab="alerts">Hälytykset <span class="w-5 h-5 rounded-full bg-crit-500 text-white text-[10px] font-bold inline-flex items-center justify-center ml-1">4</span></button>
+    <button class="tab-btn" data-tab="alerts">Historia <span class="w-5 h-5 rounded-full bg-accent-500 text-white text-[10px] font-bold inline-flex items-center justify-center ml-1">20</span></button>
     <button class="tab-btn" data-tab="chat">AI-assistentti</button>
     <button class="tab-btn" data-tab="sources">Lähteet</button>
   </div>
@@ -337,24 +336,23 @@ function renderDashboard() {
     '<p class="text-sm text-base-200 leading-relaxed">Turun tunnin juna sai merkittävän 130M\u20ac lisärahoituksen budjettiriihessä, mikä asettaa Pääradan investointien priorisoinnin kriittiseen asemaan. Väylävirasto varoittaa, että Pääradan perusparannus vaatii vähintään 500M\u20ac ja aikataulu venyy ilman nopeita päätöksiä. Turun pormestari Minna Arve ja Turun kauppakamari ajavat aktiivisesti Länsirataa kilpailevana hankkeena. Pirkanmaan kansanedustajat julkaisivat yhteisen kannanoton lisäraiteen puolesta. VR ilmoitti, että Pääradan kapasiteetti on loppumassa ja junavuoroja joudutaan karsimaan 2027.</p>' +
     '</div></div></div>';
 
-  // Stats row
+  // Stats row (weekly comparisons)
   var statsHtml = '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
-    '<div class="card p-4 animate-fade-up stagger-1"><p class="text-xs text-base-400 mb-1">Osumat tänään</p>' +
-    '<div class="flex items-end gap-3"><span class="hero-stat text-base-100">38</span><span class="text-xs text-ok-500 font-medium mb-1">+45%</span></div>' +
-    '<div class="mt-3 h-6 flex items-end">' +
-    '<span class="spark-bar" style="height:30%"></span><span class="spark-bar" style="height:45%"></span><span class="spark-bar" style="height:25%"></span>' +
-    '<span class="spark-bar" style="height:55%"></span><span class="spark-bar" style="height:40%"></span><span class="spark-bar" style="height:75%"></span>' +
-    '<span class="spark-bar" style="height:65%"></span><span class="spark-bar" style="height:85%"></span><span class="spark-bar" style="height:95%"></span>' +
-    '<span class="spark-bar" style="height:80%"></span><span class="spark-bar" style="height:100%;background:#60a5fa"></span>' +
-    '</div></div>' +
+    '<div class="card p-4 animate-fade-up stagger-1"><p class="text-xs text-base-400 mb-1">Osumat tällä viikolla</p>' +
+    '<div class="flex items-end gap-3"><span class="hero-stat text-base-100">189</span><span class="text-xs text-ok-500 font-medium mb-1">+68% vko</span></div>' +
+    '<div class="mt-3 h-6 flex items-end gap-0.5">' +
+    '<span class="spark-bar" style="height:40%;flex:1"></span><span class="spark-bar" style="height:55%;flex:1"></span><span class="spark-bar" style="height:50%;flex:1"></span>' +
+    '<span class="spark-bar" style="height:65%;flex:1"></span><span class="spark-bar" style="height:75%;flex:1"></span><span class="spark-bar" style="height:85%;flex:1"></span>' +
+    '<span class="spark-bar" style="height:100%;flex:1;background:#60a5fa"></span>' +
+    '</div><div class="flex justify-between mt-1 text-[9px] text-base-600"><span>ma</span><span>ti</span><span>ke</span><span>to</span><span>pe</span><span>la</span><span>su</span></div></div>' +
     '<div class="card p-4 animate-fade-up stagger-2"><p class="text-xs text-base-400 mb-1">Kriittiset</p>' +
-    '<div class="flex items-end gap-3"><span class="hero-stat text-crit-500">4</span><span class="text-xs text-crit-500 font-medium mb-1">+3</span></div>' +
+    '<div class="flex items-end gap-3"><span class="hero-stat text-crit-500">8</span><span class="text-xs text-crit-500 font-medium mb-1">+300% vko</span></div>' +
     '<p class="text-xs text-base-500 mt-3">Vaatii välitöntä huomiota</p></div>' +
     '<div class="card p-4 animate-fade-up stagger-3"><p class="text-xs text-base-400 mb-1">Seurattavat aiheet</p>' +
     '<div class="flex items-end gap-3"><span class="hero-stat text-base-100">7</span></div>' +
     '<p class="text-xs text-base-500 mt-3">4 nousevaa trendiä</p></div>' +
     '<div class="card p-4 animate-fade-up stagger-4"><p class="text-xs text-base-400 mb-1">Kilpailija-aktiivisuus</p>' +
-    '<div class="flex items-end gap-3"><span class="hero-stat text-crit-500">&uarr; 95%</span></div>' +
+    '<div class="flex items-end gap-3"><span class="hero-stat text-crit-500">&uarr; 95%</span><span class="text-xs text-base-500 font-medium mb-1">vko</span></div>' +
     '<p class="text-xs text-base-500 mt-3">Turku/Länsirata-viestintä</p></div></div>';
 
   // Weak signals section
@@ -369,12 +367,15 @@ function renderDashboard() {
     '<div class="flex gap-2 items-start"><span class="signal-dot signal-teal"></span><span class="text-sm text-base-300">EU:n CEF-rahoitushaku avautumassa — rata-hankkeet hakukelpoisia, mahdollisuus Pääradan rahoitukselle</span></div>' +
     '</div></div>';
 
-  // Hits list
+  // Hits list (color-coded by level, no scores)
+  var levelColors = { critical:'#ef4444', important:'#f59e0b', normal:'#3b82f6' };
   var hitsHtml = '';
   mediaHits.forEach(function(h, i) {
     var tagsStr = h.tags.map(function(t) { return '<span class="tag-pill bg-base-800 text-base-400" style="font-size:10px;">' + escapeHtml(t) + '</span>'; }).join('');
-    hitsHtml += '<div class="card p-4 flex items-start gap-4 animate-fade-up stagger-' + (i+1) + '" style="cursor:pointer;">' +
-      scoreRingSvg(h.score, 48) +
+    var barColor = levelColors[h.level] || '#627d98';
+    hitsHtml += '<div class="card flex items-stretch gap-0 overflow-hidden animate-fade-up stagger-' + (i+1) + '" style="cursor:pointer;">' +
+      '<div class="alert-level-bar" style="background:' + barColor + ';"></div>' +
+      '<div class="flex items-start gap-4 p-4 flex-1 min-w-0">' +
       '<div class="flex-1 min-w-0">' +
       '<p class="text-sm font-medium text-base-100 mb-1 leading-snug">' + escapeHtml(h.title) + '</p>' +
       '<div class="flex items-center gap-3 flex-wrap">' +
@@ -388,7 +389,7 @@ function renderDashboard() {
       '<button class="action-btn" title="Avaa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg></button>' +
       '<button class="action-btn" title="Jaa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>' +
       '<button class="action-btn" title="Merkitse luetuksi"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></button>' +
-      '</div></div>';
+      '</div></div></div>';
   });
 
   // Trends
@@ -400,50 +401,34 @@ function renderDashboard() {
       '<div class="w-1 self-stretch rounded-full" style="background:' + t.color + ';"></div>' +
       '<div class="flex-1 min-w-0"><p class="text-sm font-medium">' + escapeHtml(t.topic) + '</p>' +
       '<p class="text-xs text-base-500">' + t.hits + ' osumaa tällä viikolla</p></div>' +
-      '<div class="text-right"><span class="text-xs font-mono ' + cls + '">' + arrow + ' ' + t.change + '</span></div></div>';
+      '<div class="text-right"><span class="text-xs font-mono ' + cls + '">' + arrow + ' ' + t.change + '</span><p class="text-[10px] text-base-600">vs. ed. vko</p></div></div>';
   });
 
-  // Activity chart
-  var activityHtml = '<div class="card p-4 mt-4">' +
-    '<h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Osumat per tunti (tänään)</h4>' +
-    '<div class="flex items-end gap-1 h-20">' +
-    '<div class="flex-1 rounded-t" style="height:15%;background:#1e3a5f;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:8%;background:#1e3a5f;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:5%;background:#1e3a5f;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:5%;background:#1e3a5f;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:10%;background:#1e3a5f;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:25%;background:#243b53;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:40%;background:#243b53;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:65%;background:#2563eb;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:90%;background:#2563eb;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:100%;background:#ef4444;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:85%;background:#3b82f6;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:70%;background:#3b82f6;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:55%;background:#2563eb;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:40%;background:#2563eb;border:1px dashed #60a5fa50;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:30%;background:#1e3a5f;border:1px dashed #60a5fa30;"></div>' +
-    '<div class="flex-1 rounded-t" style="height:20%;background:#1e3a5f;border:1px dashed #60a5fa30;"></div>' +
-    '</div><div class="flex justify-between mt-2 text-[10px] text-base-500"><span>00</span><span>06</span><span>12</span><span>18</span><span>nyt</span></div></div>';
-
-  // Source distribution
+  // Source distribution with sentiment
   var sourcesData = [
-    {name:"Helsingin Sanomat", w:"30%", c:"#3b82f6", n:9},
-    {name:"Aamulehti", w:"25%", c:"#3b82f6", n:7},
-    {name:"Kauppalehti", w:"22%", c:"#2563eb", n:6},
-    {name:"Yle", w:"18%", c:"#3b82f6", n:5},
-    {name:"Turun Sanomat", w:"15%", c:"#f59e0b", n:4},
-    {name:"Tekniikka ja Talous", w:"12%", c:"#2563eb", n:3},
-    {name:"LinkedIn", w:"10%", c:"#60a5fa", n:3},
-    {name:"Talouselämä", w:"5%", c:"#627d98", n:1}
+    {name:"Helsingin Sanomat", w:"30%", c:"#3b82f6", n:32, sent:"neg", sentLabel:"Negatiivinen"},
+    {name:"Aamulehti", w:"25%", c:"#3b82f6", n:24, sent:"pos", sentLabel:"Positiivinen"},
+    {name:"Kauppalehti", w:"22%", c:"#2563eb", n:21, sent:"neg", sentLabel:"Negatiivinen"},
+    {name:"Yle", w:"18%", c:"#3b82f6", n:18, sent:"neu", sentLabel:"Neutraali"},
+    {name:"Turun Sanomat", w:"15%", c:"#f59e0b", n:14, sent:"neg", sentLabel:"Negatiivinen"},
+    {name:"Tekniikka ja Talous", w:"12%", c:"#2563eb", n:11, sent:"neg", sentLabel:"Negatiivinen"},
+    {name:"LinkedIn", w:"10%", c:"#60a5fa", n:9, sent:"pos", sentLabel:"Positiivinen"},
+    {name:"Talouselämä", w:"5%", c:"#627d98", n:5, sent:"pos", sentLabel:"Positiivinen"}
   ];
-  var sourcesHtml = '<div class="card p-4 mt-3"><h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Lähteet tänään</h4><div class="space-y-2">';
+  var sentDotColors = { pos:'#10b981', neg:'#ef4444', neu:'#f59e0b' };
+  var sourcesHtml = '<div class="card p-4 mt-3"><h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Lähteet tällä viikolla</h4><div class="space-y-2.5">';
   sourcesData.forEach(function(s) {
     sourcesHtml += '<div class="flex items-center gap-2 text-xs">' +
       '<span class="text-base-300 w-28 truncate">' + escapeHtml(s.name) + '</span>' +
       '<div class="flex-1 h-2 rounded-full bg-base-800 overflow-hidden"><div class="h-full rounded-full" style="width:' + s.w + ';background:' + s.c + '"></div></div>' +
-      '<span class="text-base-400 font-mono w-6 text-right">' + s.n + '</span></div>';
+      '<span class="text-base-400 font-mono w-6 text-right">' + s.n + '</span>' +
+      '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:' + sentDotColors[s.sent] + ';" title="' + s.sentLabel + '"></span></div>';
   });
-  sourcesHtml += '</div></div>';
+  sourcesHtml += '<div class="flex items-center gap-4 mt-2 pt-2 border-t text-[10px] text-base-500" style="border-color:var(--border);">' +
+    '<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-ok-500"></span>Positiivinen</span>' +
+    '<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-warn-500"></span>Neutraali</span>' +
+    '<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-crit-500"></span>Negatiivinen</span></div>' +
+    '</div></div>';
 
   // Combine
   var fullHtml = summaryHtml + statsHtml + signalsHtml +
@@ -454,7 +439,7 @@ function renderDashboard() {
     '<select class="action-btn text-xs" style="background:var(--bg-card);"><option>Kaikki aiheet</option><option>Päärata</option><option>Länsirata</option><option>Ratainvestoinnit</option><option>Valtatie 12</option></select></div></div>' +
     '<div class="space-y-2">' + hitsHtml + '</div></div>' +
     '<div><h3 class="section-title mb-4">Trendit</h3><div class="space-y-3">' + trendsHtml + '</div>' +
-    activityHtml + sourcesHtml + '</div></div>';
+    sourcesHtml + '</div></div>';
 
   setStaticContent(container, fullHtml);
   return container;
@@ -516,14 +501,6 @@ function renderTopics() {
   });
   peopleSectionHtml += '</div>';
 
-  // Related topics
-  var relatedTopics = ["Kaksoisraide","Lisäraide","Ratasuunnitelma","Pääradan kapasiteetti","Helsinki\u2013Tampere","Tampere\u2013Oulu","Raideinfra","Investointiohjelma"];
-  var relatedHtml = '<div class="card p-4 mb-5"><h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Liittyvät avainsanat</h4><div class="flex flex-wrap gap-2">';
-  relatedTopics.forEach(function(t) {
-    relatedHtml += '<span class="tag-pill bg-base-800 text-base-300 cursor-pointer hover:bg-base-700">' + escapeHtml(t) + '</span>';
-  });
-  relatedHtml += '</div></div>';
-
   // Timeline hits
   var timelineItems = [
     { title:"Turun tunnin juna sai 130M\u20ac lisärahoituksen — Päärata jäämässä ilman", source:"Helsingin Sanomat", time:"25 min sitten", score:94, sentiment:"neg" },
@@ -551,7 +528,7 @@ function renderTopics() {
     '<div class="card p-4"><h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Sentimentti (30 pv)</h4>' + sentimentSvg +
     '<p class="text-xs text-base-500 mt-2">Sentimentti laskenut merkittävästi budjettiriihen jälkeen — Länsirata-rahoitus huolettaa</p></div>' +
     '<div class="card p-4"><h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Avaintoimijat aiheessa</h4>' + peopleSectionHtml + '</div></div>' +
-    relatedHtml + timelineHtml + '</div></div>';
+    timelineHtml + '</div></div>';
 
   setStaticContent(container, fullHtml);
   return container;
@@ -562,7 +539,31 @@ function renderPeople() {
   container.id = 'view-people';
   container.className = 'view';
 
-  var filterHtml = '<h3 class="section-title mb-5">Henkilöt &amp; organisaatiot</h3>' +
+  // Social post mock data per person
+  var personPosts = {
+    "Petteri Orpo": [
+      { platform:"X", text:"Ratainvestointien priorisointi tehdään syksyn budjettiriihessä. Kaikkia hankkeita ei voida rahoittaa samanaikaisesti.", time:"2 t sitten", postSent:"neu", likes:234, comments:89, commentSent:"neg", commentSummary:"Kriittisiä: 'Päärata unohtuu jälleen', 'Turku saa kaiken'" },
+      { platform:"LinkedIn", text:"Hallituksen liikennepoliittinen linja on selkeä: priorisoimme hankkeet vaikuttavuuden perusteella.", time:"1 pv sitten", postSent:"pos", likes:156, comments:42, commentSent:"neg", commentSummary:"Kommenteissa huolta Pääradan asemasta, kyseenalaistetaan priorisointikriteerit" },
+      { platform:"X", text:"Budjettiriihi saatu päätökseen. Isoja päätöksiä liikenneinvestointien osalta.", time:"3 pv sitten", postSent:"neu", likes:567, comments:312, commentSent:"neg", commentSummary:"Voimakas kritiikki: Päärata-investoinnit jäivät ilman rahoitusta, Tunnin juna priorisoitiin" }
+    ],
+    "Minna Arve": [
+      { platform:"X", text:"Länsirata on koko Suomen kilpailukyvyn kysymys. Turun ja Helsingin välinen nopea yhteys hyödyttää koko talousaluetta.", time:"1,5 t sitten", postSent:"pos", likes:445, comments:178, commentSent:"neg", commentSummary:"Tampere-leiri vastustaa voimakkaasti: 'Päärata on tärkeämpi', 'Miten muu Suomi hyötyy?'" },
+      { platform:"LinkedIn", text:"Erinomainen uutinen: Tunnin juna -hanke sai 130M\u20ac lisärahoituksen budjettiriihessä!", time:"4 t sitten", postSent:"pos", likes:623, comments:201, commentSent:"neg", commentSummary:"Pirkanmaan edustajat kriittisiä, useita 'Entä Päärata?'-kommentteja" },
+      { platform:"X", text:"Turun kauppakamarin kanssa yhteistyössä vauhdittamassa Länsirataa. Kiitos tuesta!", time:"2 pv sitten", postSent:"pos", likes:189, comments:56, commentSent:"neu", commentSummary:"Neutraali vastaanotto, muutama kriittinen Tampere-viittaus" }
+    ],
+    "Kaisa Leiwo": [
+      { platform:"LinkedIn", text:"Tampere\u2013Helsinki-yhteys on Suomen talouden selkäranka. Pääradan kehittäminen ei ole vaihtoehto \u2014 se on välttämättömyys.", time:"3,5 t sitten", postSent:"pos", likes:412, comments:87, commentSent:"pos", commentSummary:"Laaja tuki: 'Juuri näin!', 'Päärata ensin'. Muutama Turku-puolustus." },
+      { platform:"X", text:"Väyläviraston arvio on selvä: Pääradan perusparannus vaatii 500M\u20ac. Milloin rahoituspäätökset tehdään?", time:"1 pv sitten", postSent:"neg", likes:289, comments:134, commentSent:"pos", commentSummary:"Voimakas tuki, vaatimuksia nopeista päätöksistä" },
+      { platform:"LinkedIn", text:"Pirkanmaan kansanedustajien yhteinen kannanotto on tervetullut. Nyt tarvitaan tekoja.", time:"2 pv sitten", postSent:"pos", likes:378, comments:65, commentSent:"pos", commentSummary:"Positiivinen vastaanotto, elinkeinoelämän tuki näkyy" }
+    ],
+    "Turun kauppakamari": [
+      { platform:"LinkedIn", text:"Länsirata tuottaa 2,5 miljardia euroa lisäarvoa Suomen taloudelle. Lue tuore selvityksemme.", time:"2 t sitten", postSent:"pos", likes:534, comments:156, commentSent:"neg", commentSummary:"Laskelmat kyseenalaistettu, Päärata-vertailuja, 'puolueellinen selvitys'" },
+      { platform:"X", text:"Tunnin juna -hankkeen lisärahoitus on merkittävä askel oikeaan suuntaan. #tunninjuna #länsirata", time:"5 t sitten", postSent:"pos", likes:267, comments:98, commentSent:"neg", commentSummary:"Kriittisiä vastauksia Tampereelta ja Pirkanmaalta" }
+    ]
+  };
+
+  var filterHtml = '<div id="people-list">' +
+    '<h3 class="section-title mb-5">Henkilöt &amp; organisaatiot</h3>' +
     '<div class="flex gap-2 mb-5">' +
     '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer">Kaikki</button>' +
     '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Päättäjät</button>' +
@@ -573,12 +574,13 @@ function renderPeople() {
   var gridHtml = '<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">';
   people.forEach(function(p, i) {
     var tagsStr = p.topics.map(function(t) { return '<span class="tag-pill bg-base-800 text-base-400" style="font-size:10px;">' + escapeHtml(t) + '</span>'; }).join('');
-    gridHtml += '<div class="card p-4 animate-fade-up stagger-' + ((i%10)+1) + '">' +
+    gridHtml += '<div class="card p-4 animate-fade-up stagger-' + ((i%10)+1) + ' cursor-pointer hover:ring-1 hover:ring-accent-500/30 transition-all" data-person="' + escapeHtml(p.name) + '">' +
       '<div class="flex items-start gap-3 mb-3">' +
       '<div class="w-11 h-11 rounded-full bg-base-700 flex items-center justify-center text-sm font-semibold text-base-300 flex-shrink-0">' + escapeHtml(p.initials) + '</div>' +
       '<div class="flex-1 min-w-0"><p class="text-sm font-semibold">' + escapeHtml(p.name) + '</p>' +
       '<p class="text-xs text-base-500">' + escapeHtml(p.role) + '</p>' +
-      '<p class="text-xs text-base-500">' + escapeHtml(p.org) + '</p></div></div>' +
+      '<p class="text-xs text-base-500">' + escapeHtml(p.org) + '</p></div>' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#627d98" stroke-width="2" class="flex-shrink-0 mt-1"><path d="M9 18l6-6-6-6"/></svg></div>' +
       '<div class="flex items-center justify-between mb-3">' +
       '<span class="text-xs text-base-400">' + p.mentions + ' mainintaa tällä viikolla</span>' +
       sentimentLabel(p.sentiment) + '</div>' +
@@ -587,154 +589,127 @@ function renderPeople() {
       '<div class="flex items-end gap-0.5 flex-1 h-6">' + sparkBars(7) + '</div>' +
       '<span class="text-[10px] text-base-500 self-end">7 pv</span></div></div>';
   });
-  gridHtml += '</div>';
+  gridHtml += '</div></div>';
 
-  // Network visualization — Päärata vs Länsirata
-  var networkHtml = '<div class="card p-5 mt-6">' +
-    '<h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Verkostokartta — Päärata vs. Länsirata -keskustelu</h4>' +
-    '<svg viewBox="0 0 800 350" class="w-full">' +
-    // Background circles
-    '<circle cx="300" cy="175" r="130" fill="none" stroke="#3b82f615" stroke-width="1"/>' +
-    '<circle cx="530" cy="175" r="130" fill="none" stroke="#f59e0b15" stroke-width="1"/>' +
-    // Connection lines — Päärata side
-    '<line x1="300" y1="175" x2="180" y2="100" stroke="#3b82f630" stroke-width="1.5"/>' +
-    '<line x1="300" y1="175" x2="150" y2="200" stroke="#3b82f625" stroke-width="1"/>' +
-    '<line x1="300" y1="175" x2="220" y2="280" stroke="#3b82f620" stroke-width="1"/>' +
-    '<line x1="300" y1="175" x2="370" y2="80" stroke="#3b82f630" stroke-width="1.5"/>' +
-    '<line x1="300" y1="175" x2="350" y2="270" stroke="#3b82f620" stroke-width="1"/>' +
-    // Connection lines — Länsirata side
-    '<line x1="530" y1="175" x2="650" y2="100" stroke="#f59e0b30" stroke-width="1.5"/>' +
-    '<line x1="530" y1="175" x2="670" y2="200" stroke="#f59e0b25" stroke-width="1"/>' +
-    '<line x1="530" y1="175" x2="600" y2="280" stroke="#f59e0b20" stroke-width="1"/>' +
-    // Shared connections
-    '<line x1="300" y1="175" x2="415" y2="130" stroke="#8b5cf630" stroke-width="1.5"/>' +
-    '<line x1="530" y1="175" x2="415" y2="130" stroke="#8b5cf630" stroke-width="1.5"/>' +
-    '<line x1="300" y1="175" x2="415" y2="240" stroke="#8b5cf620" stroke-width="1"/>' +
-    '<line x1="530" y1="175" x2="415" y2="240" stroke="#8b5cf620" stroke-width="1"/>' +
-    // Central topic nodes
-    '<circle cx="300" cy="175" r="28" fill="#1d4ed8" stroke="#60a5fa" stroke-width="2" class="network-node" style="cursor:pointer"/>' +
-    '<text x="300" y="172" text-anchor="middle" fill="white" font-size="9" font-family="DM Sans" font-weight="600">Päärata</text>' +
-    '<text x="300" y="183" text-anchor="middle" fill="#bfdbfe" font-size="7" font-family="DM Sans">28 osumaa</text>' +
-    '<circle cx="530" cy="175" r="24" fill="#92400e" stroke="#f59e0b" stroke-width="2" class="network-node" style="cursor:pointer"/>' +
-    '<text x="530" y="172" text-anchor="middle" fill="white" font-size="8" font-family="DM Sans" font-weight="600">Länsirata</text>' +
-    '<text x="530" y="183" text-anchor="middle" fill="#fde68a" font-size="7" font-family="DM Sans">19 osumaa</text>' +
-    // Päärata actors
-    '<circle cx="180" cy="100" r="16" fill="#163050" stroke="#10b981" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
-    '<text x="180" y="103" text-anchor="middle" fill="#e2e8f0" font-size="7" font-family="DM Sans">Leiwo</text>' +
-    '<circle cx="150" cy="200" r="16" fill="#163050" stroke="#3b82f6" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
-    '<text x="150" y="203" text-anchor="middle" fill="#e2e8f0" font-size="7" font-family="DM Sans">VR</text>' +
-    '<circle cx="220" cy="280" r="14" fill="#163050" stroke="#627d98" stroke-width="1" class="network-node" style="cursor:pointer"/>' +
-    '<text x="220" y="283" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans">Pirkan. ke</text>' +
-    '<circle cx="370" cy="80" r="16" fill="#163050" stroke="#3b82f6" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
-    '<text x="370" y="83" text-anchor="middle" fill="#e2e8f0" font-size="7" font-family="DM Sans">Väylä</text>' +
-    '<circle cx="350" cy="270" r="14" fill="#163050" stroke="#627d98" stroke-width="1" class="network-node" style="cursor:pointer"/>' +
-    '<text x="350" y="273" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans">Fintraffic</text>' +
-    // Länsirata actors
-    '<circle cx="650" cy="100" r="17" fill="#163050" stroke="#ef4444" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
-    '<text x="650" y="103" text-anchor="middle" fill="#e2e8f0" font-size="7" font-family="DM Sans">Arve</text>' +
-    '<circle cx="670" cy="200" r="15" fill="#163050" stroke="#f59e0b" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
-    '<text x="670" y="203" text-anchor="middle" fill="#e2e8f0" font-size="7" font-family="DM Sans">Turun KK</text>' +
-    '<circle cx="600" cy="280" r="14" fill="#163050" stroke="#627d98" stroke-width="1" class="network-node" style="cursor:pointer"/>' +
-    '<text x="600" y="283" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans">Turun kau</text>' +
-    // Shared actors
-    '<circle cx="415" cy="130" r="18" fill="#163050" stroke="#8b5cf6" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
-    '<text x="415" y="133" text-anchor="middle" fill="#e2e8f0" font-size="8" font-family="DM Sans">Orpo</text>' +
-    '<circle cx="415" cy="240" r="16" fill="#163050" stroke="#8b5cf6" stroke-width="1.5" class="network-node" style="cursor:pointer"/>' +
-    '<text x="415" y="243" text-anchor="middle" fill="#e2e8f0" font-size="7" font-family="DM Sans">LVM</text>' +
-    // Labels
-    '<text x="300" y="330" text-anchor="middle" fill="#3b82f680" font-size="10" font-family="DM Sans" font-style="italic">Tampere &amp; Pirkanmaa</text>' +
-    '<text x="530" y="330" text-anchor="middle" fill="#f59e0b80" font-size="10" font-family="DM Sans" font-style="italic">Turku &amp; Varsinais-Suomi</text>' +
-    '</svg></div>';
+  // Person detail panel (hidden by default)
+  var detailHtml = '<div id="people-detail" style="display:none;"></div>';
 
-  setStaticContent(container, filterHtml + gridHtml + networkHtml);
+  setStaticContent(container, filterHtml + gridHtml + detailHtml);
+
+  // Store data globally for detail view
+  window._personPosts = personPosts;
+  window._people = people;
+
+  // Attach click handlers via event delegation
+  container.addEventListener('click', function(e) {
+    var card = e.target.closest('[data-person]');
+    if (card) {
+      showPersonDetail(card.getAttribute('data-person'));
+    }
+  });
+
   return container;
 }
 
-function renderReports() {
-  var container = document.createElement('div');
-  container.id = 'view-reports';
-  container.className = 'view';
+// Show person detail view with social posts and comment sentiment
+function showPersonDetail(name) {
+  var person = null;
+  window._people.forEach(function(p) { if (p.name === name) person = p; });
+  if (!person) return;
 
-  var html = '<div class="flex items-center justify-between mb-5">' +
-    '<h3 class="section-title">Raportit</h3>' +
-    '<div class="flex gap-2">' +
-    '<button class="action-btn flex items-center gap-1.5"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Lataa PDF</button>' +
-    '<button class="action-btn flex items-center gap-1.5"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Lataa PPTX</button></div></div>' +
+  var posts = window._personPosts[name] || [];
+  var listEl = document.getElementById('people-list');
+  var detailEl = document.getElementById('people-detail');
 
-    '<div class="flex gap-2 mb-5">' +
-    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Päiväraportti</button>' +
-    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer">Viikkoraportti</button>' +
-    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Kuukausiraportti</button>' +
-    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer hover:bg-base-700">Kvartaaliraportti</button></div>' +
+  listEl.style.display = 'none';
+  detailEl.style.display = 'block';
 
-    // Weekly report
-    '<div class="card p-6 mb-6" style="background:linear-gradient(135deg,#163050,#1a3a5c);">' +
-    '<div class="flex items-center gap-2 mb-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>' +
-    '<span class="text-sm font-semibold text-accent-400 uppercase tracking-wider" style="font-size:11px;">Viikkoraportti &middot; VKO 12 / 2026</span></div>' +
-    '<h2 class="font-serif text-2xl mb-4">Viikon mediakatsaus</h2>' +
-    '<div class="text-sm text-base-300 leading-relaxed space-y-3">' +
-    '<p>Viikon merkittävin mediatapahtuma oli Turun tunnin juna -hankkeen saama 130M\u20ac lisärahoitus budjettiriihessä, mikä nosti Päärata-keskustelun kriittiselle tasolle 28 osumalla. Tampereen Kauppakamari reagoi kannanotolla, joka sai näkyvyyttä Aamulehdessä, Kauppalehdessä ja Helsingin Sanomissa.</p>' +
-    '<p>Väyläviraston arvio Pääradan perusparannuksen 500M\u20ac hintapukista herätti laajaa keskustelua. Pirkanmaan kansanedustajat julkaisivat yhteisen kannanoton lisäraiteen puolesta Helsinki\u2013Tampere-välille.</p>' +
-    '<p>Kilpailija-aktiivisuus nousi 95% — Turun pormestari Minna Arve ja Turun kauppakamari ajoivat aktiivisesti Länsirataa useissa medioissa. VR:n kapasiteettivaroitus lisäsi kiireellisyyttä Pääradan kehittämiseen.</p></div></div>' +
+  var sentColors = { pos:'#10b981', neg:'#ef4444', neu:'#f59e0b' };
+  var sentLabels = { pos:'Positiivinen', neg:'Negatiivinen', neu:'Neutraali' };
+  var platformIcons = {
+    'X': '<svg width="14" height="14" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+    'LinkedIn': '<svg width="14" height="14" viewBox="0 0 24 24" fill="#0a66c2"><path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"/></svg>'
+  };
 
-    // Charts
-    '<div class="grid md:grid-cols-2 gap-5 mb-6">' +
-    '<div class="card p-4"><h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Osumien kehitys (kuukausi)</h4>' +
-    '<svg viewBox="0 0 400 140" class="w-full">' +
-    '<line x1="30" y1="20" x2="390" y2="20" stroke="#243b5330" stroke-width="1"/>' +
-    '<line x1="30" y1="50" x2="390" y2="50" stroke="#243b5320" stroke-width="1" stroke-dasharray="3"/>' +
-    '<line x1="30" y1="80" x2="390" y2="80" stroke="#243b5320" stroke-width="1" stroke-dasharray="3"/>' +
-    '<line x1="30" y1="110" x2="390" y2="110" stroke="#243b5330" stroke-width="1"/>' +
-    '<text x="5" y="24" fill="#627d98" font-size="8" font-family="JetBrains Mono">50</text>' +
-    '<text x="5" y="54" fill="#627d98" font-size="8" font-family="JetBrains Mono">35</text>' +
-    '<text x="5" y="84" fill="#627d98" font-size="8" font-family="JetBrains Mono">20</text>' +
-    '<text x="5" y="114" fill="#627d98" font-size="8" font-family="JetBrains Mono">0</text>' +
-    '<rect x="50" y="65" width="30" height="45" rx="3" fill="#1e3a5f"/>' +
-    '<rect x="100" y="55" width="30" height="55" rx="3" fill="#243b53"/>' +
-    '<rect x="150" y="45" width="30" height="65" rx="3" fill="#243b53"/>' +
-    '<rect x="200" y="50" width="30" height="60" rx="3" fill="#2563eb"/>' +
-    '<rect x="250" y="22" width="30" height="88" rx="3" fill="#3b82f6"/>' +
-    '<text x="55" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK8</text>' +
-    '<text x="105" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK9</text>' +
-    '<text x="155" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK10</text>' +
-    '<text x="205" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK11</text>' +
-    '<text x="250" y="130" fill="#627d98" font-size="8" font-family="DM Sans">VK12</text></svg></div>' +
+  var html = '<div class="animate-fade-up">' +
+    '<button class="action-btn mb-5 flex items-center gap-1.5" id="back-to-people">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>' +
+    'Takaisin</button>' +
 
-    '<div class="card p-4"><h4 class="text-xs text-base-400 font-medium mb-4 uppercase tracking-wider">Aihejakauma (kuukausi)</h4>' +
-    '<svg viewBox="0 0 400 140" class="w-full">' +
-    '<text x="5" y="28" fill="#94a3b8" font-size="9" font-family="DM Sans">Päärata</text>' +
-    '<rect x="90" y="18" width="200" height="16" rx="3" fill="#ef4444" opacity="0.7"/>' +
-    '<text x="295" y="29" fill="#627d98" font-size="9" font-family="JetBrains Mono">28</text>' +
-    '<text x="5" y="52" fill="#94a3b8" font-size="9" font-family="DM Sans">Länsirata</text>' +
-    '<rect x="90" y="42" width="135" height="16" rx="3" fill="#f59e0b" opacity="0.7"/>' +
-    '<text x="230" y="53" fill="#627d98" font-size="9" font-family="JetBrains Mono">19</text>' +
-    '<text x="5" y="76" fill="#94a3b8" font-size="9" font-family="DM Sans">Investoinnit</text>' +
-    '<rect x="90" y="66" width="115" height="16" rx="3" fill="#3b82f6" opacity="0.7"/>' +
-    '<text x="210" y="77" fill="#627d98" font-size="9" font-family="JetBrains Mono">16</text>' +
-    '<text x="5" y="100" fill="#94a3b8" font-size="9" font-family="DM Sans">Budjettiriihi</text>' +
-    '<rect x="90" y="90" width="85" height="16" rx="3" fill="#8b5cf6" opacity="0.7"/>' +
-    '<text x="180" y="101" fill="#627d98" font-size="9" font-family="JetBrains Mono">12</text>' +
-    '<text x="5" y="124" fill="#94a3b8" font-size="9" font-family="DM Sans">Kapasiteetti</text>' +
-    '<rect x="90" y="114" width="65" height="16" rx="3" fill="#10b981" opacity="0.7"/>' +
-    '<text x="160" y="125" fill="#627d98" font-size="9" font-family="JetBrains Mono">9</text></svg></div></div>' +
+    // Person header
+    '<div class="card p-5 mb-5" style="background:linear-gradient(135deg,#163050,#1a3a5c);">' +
+    '<div class="flex items-start gap-4">' +
+    '<div class="w-14 h-14 rounded-full bg-base-700 flex items-center justify-center text-lg font-semibold text-base-200 flex-shrink-0">' + escapeHtml(person.initials) + '</div>' +
+    '<div class="flex-1"><h2 class="font-serif text-xl mb-1">' + escapeHtml(person.name) + '</h2>' +
+    '<p class="text-sm text-base-400">' + escapeHtml(person.role) + ' &middot; ' + escapeHtml(person.org) + '</p>' +
+    '<div class="flex items-center gap-4 mt-3">' +
+    '<span class="text-xs text-base-400">' + person.mentions + ' mainintaa tällä viikolla</span>' +
+    sentimentLabel(person.sentiment) +
+    '<span class="text-xs text-base-400">' + posts.length + ' somepostausta</span></div></div></div></div>';
 
-    // Metrics table
-    '<div class="card overflow-hidden"><table class="w-full text-sm">' +
-    '<thead><tr class="text-xs text-base-400 uppercase tracking-wider border-b" style="border-color:var(--border);">' +
-    '<th class="text-left py-3 px-4 font-medium">Mittari</th>' +
-    '<th class="text-right py-3 px-4 font-medium">Tämä viikko</th>' +
-    '<th class="text-right py-3 px-4 font-medium">Edellinen</th>' +
-    '<th class="text-right py-3 px-4 font-medium">Muutos</th></tr></thead>' +
-    '<tbody class="text-base-300">' +
-    '<tr class="border-b" style="border-color:var(--border);"><td class="py-3 px-4">Mediaosumat yhteensä</td><td class="py-3 px-4 text-right font-mono">189</td><td class="py-3 px-4 text-right font-mono text-base-500">112</td><td class="py-3 px-4 text-right font-mono text-ok-500">+68.8%</td></tr>' +
-    '<tr class="border-b" style="border-color:var(--border);"><td class="py-3 px-4">Kriittiset hälytykset</td><td class="py-3 px-4 text-right font-mono">8</td><td class="py-3 px-4 text-right font-mono text-base-500">2</td><td class="py-3 px-4 text-right font-mono text-crit-500">+300%</td></tr>' +
-    '<tr class="border-b" style="border-color:var(--border);"><td class="py-3 px-4">Kilpailija-aktiivisuus (Turku)</td><td class="py-3 px-4 text-right font-mono">19</td><td class="py-3 px-4 text-right font-mono text-base-500">8</td><td class="py-3 px-4 text-right font-mono text-crit-500">+137.5%</td></tr>' +
-    '<tr class="border-b" style="border-color:var(--border);"><td class="py-3 px-4">Uniikit lähteet</td><td class="py-3 px-4 text-right font-mono">8</td><td class="py-3 px-4 text-right font-mono text-base-500">6</td><td class="py-3 px-4 text-right font-mono text-ok-500">+33.3%</td></tr>' +
-    '<tr><td class="py-3 px-4">Sentimentti (keskiarvo)</td><td class="py-3 px-4 text-right font-mono">&minus;0.32</td><td class="py-3 px-4 text-right font-mono text-base-500">&minus;0.08</td><td class="py-3 px-4 text-right font-mono text-crit-500">&minus;300%</td></tr>' +
-    '</tbody></table></div>';
+  if (posts.length === 0) {
+    html += '<div class="card p-6 text-center"><p class="text-sm text-base-500">Ei somepostauksia seurattaviin aiheisiin liittyen.</p></div>';
+  } else {
+    html += '<h4 class="text-xs text-base-400 font-medium mb-3 uppercase tracking-wider">Somepostaukset &amp; kommenttien sentimentti</h4>' +
+      '<div class="space-y-3">';
 
-  setStaticContent(container, html);
-  return container;
+    posts.forEach(function(post, i) {
+      var postSentColor = sentColors[post.postSent];
+      var commentSentColor = sentColors[post.commentSent];
+      var postSentText = sentLabels[post.postSent];
+      var commentSentText = sentLabels[post.commentSent];
+      var sentMismatch = post.postSent !== post.commentSent;
+      var icon = platformIcons[post.platform] || '';
+
+      html += '<div class="card p-4 animate-fade-up stagger-' + (i+1) + '">' +
+        '<div class="flex items-start gap-3">' +
+        '<div class="flex-shrink-0 mt-0.5">' + icon + '</div>' +
+        '<div class="flex-1 min-w-0">' +
+        '<p class="text-sm text-base-200 leading-relaxed mb-2">"' + escapeHtml(post.text) + '"</p>' +
+        '<div class="flex items-center gap-3 flex-wrap mb-3">' +
+        '<span class="text-xs text-base-500">' + escapeHtml(post.platform) + '</span>' +
+        '<span class="text-xs text-base-600">&middot;</span>' +
+        '<span class="text-xs text-base-500">' + escapeHtml(post.time) + '</span>' +
+        '<span class="text-xs text-base-600">&middot;</span>' +
+        '<span class="text-xs text-base-500">' + post.likes + ' tykk.</span>' +
+        '<span class="text-xs text-base-600">&middot;</span>' +
+        '<span class="text-xs text-base-500">' + post.comments + ' kommenttia</span></div>' +
+        '<div class="flex gap-3 mb-2">' +
+        '<div class="flex items-center gap-2 rounded-lg bg-base-900/40 px-3 py-1.5">' +
+        '<span class="text-[10px] text-base-500 uppercase tracking-wider">Postaus</span>' +
+        '<span class="w-2 h-2 rounded-full" style="background:' + postSentColor + ';"></span>' +
+        '<span class="text-xs font-medium" style="color:' + postSentColor + ';">' + postSentText + '</span></div>' +
+        '<div class="flex items-center gap-2 rounded-lg bg-base-900/40 px-3 py-1.5">' +
+        '<span class="text-[10px] text-base-500 uppercase tracking-wider">Kommentit</span>' +
+        '<span class="w-2 h-2 rounded-full" style="background:' + commentSentColor + ';"></span>' +
+        '<span class="text-xs font-medium" style="color:' + commentSentColor + ';">' + commentSentText + '</span></div>' +
+        (sentMismatch ? '<div class="flex items-center gap-1 text-xs text-warn-500"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>Ristiriita</div>' : '') +
+        '</div>' +
+        '<div class="bg-base-900/30 rounded-lg p-3 border-l-2" style="border-color:' + commentSentColor + ';">' +
+        '<p class="text-xs text-base-400 leading-relaxed">' + escapeHtml(post.commentSummary) + '</p></div>' +
+        '</div></div></div>';
+    });
+
+    html += '</div>';
+  }
+
+  html += '</div>';
+
+  // Clear and rebuild detail content safely
+  while (detailEl.firstChild) detailEl.removeChild(detailEl.firstChild);
+  setStaticContent(detailEl, html);
+
+  // Attach back button handler
+  var backBtn = document.getElementById('back-to-people');
+  if (backBtn) {
+    backBtn.addEventListener('click', function() {
+      listEl.style.display = 'block';
+      detailEl.style.display = 'none';
+      window.scrollTo(0, 0);
+    });
+  }
+
+  window.scrollTo(0, 0);
 }
 
 function renderAlerts() {
@@ -749,29 +724,104 @@ function renderAlerts() {
     low: { color:'#627d98', bg:'transparent', label:'Matala', border:'#627d9815' }
   };
 
-  var html = '<div class="flex items-center justify-between mb-5">' +
-    '<h3 class="section-title">Hälytykset</h3>' +
-    '<div class="flex gap-2">' +
-    '<button class="tag-pill bg-crit-500/20 text-crit-500 cursor-pointer">Kriittinen <span class="ml-1 font-mono">4</span></button>' +
-    '<button class="tag-pill bg-warn-500/20 text-warn-500 cursor-pointer">Tärkeä <span class="ml-1 font-mono">5</span></button>' +
-    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer">Normaali <span class="ml-1 font-mono">4</span></button>' +
-    '<button class="tag-pill bg-base-600/20 text-base-400 cursor-pointer">Matala <span class="ml-1 font-mono">2</span></button></div></div>' +
-    '<div class="space-y-2">';
+  // Expand alerts with sentiment and tags for filtering
+  var feedItems = [
+    { title:"Turun tunnin juna sai 130M\u20ac lisärahoituksen — Päärata jäämässä ilman", source:"Helsingin Sanomat", time:"25 min sitten", level:"critical", sentiment:"neg", tags:["Päärata","Budjettiriihi","Tunnin juna"] },
+    { title:"Väylävirasto: Pääradan perusparannus vaatii 500M\u20ac", source:"Kauppalehti", time:"1 t sitten", level:"critical", sentiment:"neg", tags:["Päärata","Väylävirasto","Investoinnit"] },
+    { title:"Minna Arve: Länsirata koko Suomen kilpailukyvyn kysymys", source:"Turun Sanomat", time:"1,5 t sitten", level:"critical", sentiment:"neg", tags:["Länsirata","Turku","Kilpailuasetelma"] },
+    { title:"Turun kauppakamari: Länsirata tuottaa 2,5 miljardia lisäarvoa", source:"LinkedIn", time:"2 t sitten", level:"critical", sentiment:"pos", tags:["Länsirata","Tunnin juna"] },
+    { title:"Orpo: Ratainvestointien priorisointi syksyn budjettiriihessä", source:"Yle", time:"2 t sitten", level:"important", sentiment:"neu", tags:["Budjettiriihi","Ratainvestoinnit","Hallitus"] },
+    { title:"Pirkanmaan kansanedustajien yhteinen kannanotto lisäraiteesta", source:"Aamulehti", time:"2,5 t sitten", level:"important", sentiment:"pos", tags:["Päärata","Lisäraide","Pirkanmaa"] },
+    { title:"VR: Pääradan kapasiteetti loppumassa 2027", source:"Tekniikka ja Talous", time:"3 t sitten", level:"important", sentiment:"neg", tags:["Päärata","VR","Kapasiteetti"] },
+    { title:"Kaisa Leiwo: Tampere\u2013Helsinki-yhteys talouden selkäranka", source:"LinkedIn", time:"3,5 t sitten", level:"important", sentiment:"pos", tags:["Päärata","Edunvalvonta"] },
+    { title:"Traficom: rataverkon kehittämissuunnitelma 2027\u20132035", source:"Traficom", time:"4 t sitten", level:"important", sentiment:"neu", tags:["Rataverkko","Traficom","Suunnitelma"] },
+    { title:"Valtatie 12 yleissuunnitelma valmistunut", source:"Aamulehti", time:"5 t sitten", level:"normal", sentiment:"pos", tags:["Valtatie 12","Tiesuunnitelma"] },
+    { title:"LVM: Helsinki\u2013Tampere-matka-aika voisi lyhentyä kaksoisraiteella", source:"Talouselämä", time:"6 t sitten", level:"normal", sentiment:"pos", tags:["Päärata","Kaksoisraide","LVM"] },
+    { title:"Keski-Suomen maakuntaliitto vaatii Tampere\u2013Jyväskylä-radan parannusta", source:"Yle", time:"8 t sitten", level:"normal", sentiment:"neu", tags:["Rataverkko","Jyväskylä"] },
+    { title:"Fintraffic: rataverkon häiriöt kasvaneet 15% viime vuodesta", source:"Tekniikka ja Talous", time:"eilen", level:"normal", sentiment:"neg", tags:["Rataverkko","Kapasiteetti"] },
+    { title:"EU-rahoitushaku CEF-ohjelmasta aukeaa — rata-hankkeet hakukelpoisia", source:"LVM", time:"eilen", level:"low", sentiment:"pos", tags:["EU-rahoitus","Ratainvestoinnit"] },
+    { title:"Hämeenlinnan aseman lähialueen kaavoitus etenee", source:"Aamulehti", time:"2 pv sitten", level:"low", sentiment:"pos", tags:["Päärata","Kaavoitus"] },
+    { title:"Tampereen ratapihan kehittämishanke saanut rakennusluvan", source:"Aamulehti", time:"2 pv sitten", level:"normal", sentiment:"pos", tags:["Päärata","Tampere"] },
+    { title:"Länsirata-selvitys: kustannusarvio noussut 3,4 miljardiin euroon", source:"Kauppalehti", time:"3 pv sitten", level:"important", sentiment:"neg", tags:["Länsirata","Investoinnit"] },
+    { title:"Pirkanmaan maakuntahallitus: liikenneverkko 2035 -visio hyväksytty", source:"Aamulehti", time:"3 pv sitten", level:"normal", sentiment:"pos", tags:["Pirkanmaa","Liikenneverkko"] },
+    { title:"SDP:n Lindtman: \"Ratainvestoinnit eivät saa olla joko-tai\"", source:"Yle", time:"4 pv sitten", level:"normal", sentiment:"pos", tags:["Ratainvestoinnit","SDP"] },
+    { title:"Elinkeinoelämän keskusliitto: liikenneinfran rahoitusvaje kasvaa", source:"Helsingin Sanomat", time:"5 pv sitten", level:"important", sentiment:"neg", tags:["Investoinnit","EK"] },
+  ];
 
-  alerts.forEach(function(a, i) {
+  // Header with filters
+  var html = '<div class="flex items-center justify-between mb-4">' +
+    '<div><h3 class="section-title">Mediahitti-historia</h3>' +
+    '<p class="text-xs text-base-400 mt-1">' + feedItems.length + ' osumaa &middot; suodata näkymää alla olevilla suodattimilla</p></div></div>' +
+
+    // Filter bar
+    '<div class="card p-4 mb-5">' +
+    '<div class="flex items-center gap-2 mb-3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>' +
+    '<span class="text-xs text-base-400 font-medium uppercase tracking-wider">Suodattimet</span></div>' +
+
+    // Level filter
+    '<div class="mb-3"><span class="text-[10px] text-base-500 uppercase tracking-wider block mb-1.5">Taso</span>' +
+    '<div class="flex gap-2 flex-wrap">' +
+    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer text-[11px]">Kaikki</button>' +
+    '<button class="tag-pill bg-base-800 text-crit-500 cursor-pointer text-[11px]">Kriittinen <span class="ml-1 font-mono text-[10px]">4</span></button>' +
+    '<button class="tag-pill bg-base-800 text-warn-500 cursor-pointer text-[11px]">Tärkeä <span class="ml-1 font-mono text-[10px]">7</span></button>' +
+    '<button class="tag-pill bg-base-800 text-accent-400 cursor-pointer text-[11px]">Normaali <span class="ml-1 font-mono text-[10px]">7</span></button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Matala <span class="ml-1 font-mono text-[10px]">2</span></button></div></div>' +
+
+    // Sentiment filter
+    '<div class="mb-3"><span class="text-[10px] text-base-500 uppercase tracking-wider block mb-1.5">Sentimentti</span>' +
+    '<div class="flex gap-2 flex-wrap">' +
+    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer text-[11px]">Kaikki</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]"><span class="w-2 h-2 rounded-full bg-ok-500 inline-block mr-1"></span>Positiivinen</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]"><span class="w-2 h-2 rounded-full bg-warn-500 inline-block mr-1"></span>Neutraali</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]"><span class="w-2 h-2 rounded-full bg-crit-500 inline-block mr-1"></span>Negatiivinen</button></div></div>' +
+
+    // Source filter
+    '<div class="mb-3"><span class="text-[10px] text-base-500 uppercase tracking-wider block mb-1.5">Lähde</span>' +
+    '<div class="flex gap-2 flex-wrap">' +
+    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer text-[11px]">Kaikki</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Helsingin Sanomat</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Aamulehti</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Kauppalehti</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Yle</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Tekniikka ja Talous</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">LinkedIn</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Talouselämä</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Traficom</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">LVM</button></div></div>' +
+
+    // Topic filter
+    '<div><span class="text-[10px] text-base-500 uppercase tracking-wider block mb-1.5">Aihe</span>' +
+    '<div class="flex gap-2 flex-wrap">' +
+    '<button class="tag-pill bg-accent-500/20 text-accent-400 cursor-pointer text-[11px]">Kaikki</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Päärata</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Länsirata</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Budjettiriihi</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Ratainvestoinnit</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Kapasiteetti</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">Valtatie 12</button>' +
+    '<button class="tag-pill bg-base-800 text-base-400 cursor-pointer text-[11px]">EU-rahoitus</button></div></div>' +
+
+    '</div>';
+
+  // Feed items
+  html += '<div class="space-y-2">';
+  feedItems.forEach(function(a, i) {
     var cfg = levelConfig[a.level];
+    var tagsStr = a.tags.map(function(t) { return '<span class="tag-pill bg-base-800 text-base-400" style="font-size:10px;">' + escapeHtml(t) + '</span>'; }).join('');
     html += '<div class="card flex items-stretch gap-0 overflow-hidden animate-slide-in" style="animation-delay:' + (i*0.04) + 's;background:' + cfg.bg + ';border-color:' + cfg.border + ';">' +
       '<div class="alert-level-bar" style="background:' + cfg.color + ';"></div>' +
-      '<div class="flex items-center gap-4 p-4 flex-1 min-w-0">' +
-      scoreRingSvg(a.score, 40) +
+      '<div class="flex items-start gap-4 p-4 flex-1 min-w-0">' +
       '<div class="flex-1 min-w-0"><p class="text-sm font-medium leading-snug">' + escapeHtml(a.title) + '</p>' +
-      '<div class="flex items-center gap-2 mt-1">' +
+      '<div class="flex items-center gap-2 mt-1 flex-wrap">' +
       '<span class="text-xs" style="color:' + cfg.color + ';">' + cfg.label + '</span>' +
       '<span class="text-xs text-base-600">&middot;</span>' +
       '<span class="text-xs text-base-500">' + escapeHtml(a.source) + '</span>' +
       '<span class="text-xs text-base-600">&middot;</span>' +
-      '<span class="text-xs text-base-500">' + escapeHtml(a.time) + '</span></div></div>' +
-      '<div class="flex gap-1 flex-shrink-0"><button class="action-btn">Avaa</button><button class="action-btn">Hylkää</button></div></div></div>';
+      '<span class="text-xs text-base-500">' + escapeHtml(a.time) + '</span>' +
+      '<span class="text-xs text-base-600">&middot;</span>' +
+      sentimentLabel(a.sentiment) + '</div>' +
+      '<div class="flex items-center gap-1.5 mt-2">' + tagsStr + '</div></div>' +
+      '<div class="flex flex-col gap-1 flex-shrink-0"><button class="action-btn text-[11px]">Avaa</button><button class="action-btn text-[11px]">Merkitse</button></div></div></div>';
   });
   html += '</div>';
 
@@ -1027,7 +1077,6 @@ var main = document.getElementById('mainContent');
 main.appendChild(renderDashboard());
 main.appendChild(renderTopics());
 main.appendChild(renderPeople());
-main.appendChild(renderReports());
 main.appendChild(renderAlerts());
 main.appendChild(renderChat());
 main.appendChild(renderSources());
