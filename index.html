@@ -171,6 +171,7 @@ tailwind.config = {
     <button class="tab-btn" data-tab="reports">Raportit</button>
     <button class="tab-btn" data-tab="alerts">Hälytykset <span class="w-5 h-5 rounded-full bg-crit-500 text-white text-[10px] font-bold inline-flex items-center justify-center ml-1">4</span></button>
     <button class="tab-btn" data-tab="chat">AI-assistentti</button>
+    <button class="tab-btn" data-tab="sources">Lähteet</button>
   </div>
 </nav>
 
@@ -850,6 +851,177 @@ function renderChat() {
   return container;
 }
 
+// ==================== SOURCES VIEW ====================
+
+var dataSources = [
+  { id:1, name:"Helsingin Sanomat", type:"Verkkomedia", url:"hs.fi", status:"active", freq:"15 min", lastFetch:"3 min sitten", hits24h:12, filters:["Päärata","Tampere","liikenne","rata","infrastruktuuri"], keywords:24, category:"Valtakunnallinen media" },
+  { id:2, name:"Aamulehti", type:"Verkkomedia", url:"aamulehti.fi", status:"active", freq:"15 min", lastFetch:"5 min sitten", hits24h:8, filters:["Tampere","Pirkanmaa","kauppakamari","elinvoima"], keywords:18, category:"Alueellinen media" },
+  { id:3, name:"Yle Uutiset", type:"Verkkomedia", url:"yle.fi/uutiset", status:"active", freq:"10 min", lastFetch:"1 min sitten", hits24h:15, filters:["Päärata","liikennepolitiikka","budjetti","rata"], keywords:22, category:"Valtakunnallinen media" },
+  { id:4, name:"Kauppalehti", type:"Verkkomedia", url:"kauppalehti.fi", status:"active", freq:"15 min", lastFetch:"8 min sitten", hits24h:6, filters:["infrastruktuuri","investointi","liikenne"], keywords:15, category:"Talousmedia" },
+  { id:5, name:"Tekniikka ja Talous", type:"Verkkomedia", url:"tekniikkatalous.fi", status:"active", freq:"30 min", lastFetch:"12 min sitten", hits24h:3, filters:["rata","infrastruktuuri","rakentaminen"], keywords:12, category:"Talousmedia" },
+  { id:6, name:"Talouselämä", type:"Verkkomedia", url:"talouselama.fi", status:"active", freq:"30 min", lastFetch:"18 min sitten", hits24h:4, filters:["investointi","kilpailukyky","liikenne"], keywords:14, category:"Talousmedia" },
+  { id:7, name:"Turun Sanomat", type:"Verkkomedia", url:"ts.fi", status:"active", freq:"30 min", lastFetch:"15 min sitten", hits24h:5, filters:["Turku","Länsirata","tunnin juna","rata"], keywords:16, category:"Alueellinen media" },
+  { id:8, name:"LinkedIn", type:"Sosiaalinen media", url:"linkedin.com", status:"active", freq:"1 h", lastFetch:"22 min sitten", hits24h:9, filters:["#päärata","#tampere","#liikennepolitiikka","#infrastruktuuri"], keywords:20, category:"Sosiaalinen media" },
+  { id:9, name:"X (Twitter)", type:"Sosiaalinen media", url:"x.com", status:"active", freq:"5 min", lastFetch:"1 min sitten", hits24h:34, filters:["#päärata","#tampere","@laboratorio","@vaborealista"], keywords:28, category:"Sosiaalinen media" },
+  { id:10, name:"Eduskunta — kirjalliset kysymykset", type:"Virallinen lähde", url:"eduskunta.fi", status:"active", freq:"6 h", lastFetch:"2 h sitten", hits24h:2, filters:["liikenne","rata","infrastruktuuri","Tampere"], keywords:10, category:"Viralliset lähteet" },
+  { id:11, name:"Valtioneuvoston hankeikkuna", type:"Virallinen lähde", url:"valtioneuvosto.fi/hankkeet", status:"active", freq:"12 h", lastFetch:"4 h sitten", hits24h:1, filters:["ratainvestointi","liikennehanke"], keywords:8, category:"Viralliset lähteet" },
+  { id:12, name:"Traficom — tiedotteet", type:"Virallinen lähde", url:"traficom.fi", status:"active", freq:"6 h", lastFetch:"3 h sitten", hits24h:1, filters:["rataverkko","liikenne","suunnitelma"], keywords:9, category:"Viralliset lähteet" },
+  { id:13, name:"STT", type:"Uutistoimisto", url:"stt.fi", status:"paused", freq:"10 min", lastFetch:"2 pv sitten", hits24h:0, filters:["Päärata","liikenne"], keywords:6, category:"Uutistoimistot" },
+  { id:14, name:"Maaseudun Tulevaisuus", type:"Verkkomedia", url:"maaseuduntulevaisuus.fi", status:"error", freq:"1 h", lastFetch:"Virhe: 403", hits24h:0, filters:["maaseutu","liikenne","rata"], keywords:8, category:"Alueellinen media" },
+];
+
+function renderSources() {
+  var container = document.createElement('div');
+  container.id = 'view-sources';
+  container.className = 'view';
+
+  var activeCount = dataSources.filter(function(s){ return s.status === 'active'; }).length;
+  var pausedCount = dataSources.filter(function(s){ return s.status === 'paused'; }).length;
+  var errorCount = dataSources.filter(function(s){ return s.status === 'error'; }).length;
+  var totalHits = dataSources.reduce(function(a,s){ return a + s.hits24h; }, 0);
+  var totalKeywords = dataSources.reduce(function(a,s){ return a + s.keywords; }, 0);
+
+  // Header stats
+  var html = '<div class="mb-8 animate-fade-up">' +
+    '<div class="flex items-center justify-between mb-6">' +
+    '<div><h2 class="section-title">Lähteet</h2>' +
+    '<p class="text-sm text-base-400 mt-1">Hallinnoi datalähteitä, hakufrekvenssiä ja suodattimia</p></div>' +
+    '<div class="flex gap-2">' +
+    '<button class="action-btn flex items-center gap-1.5">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Lisää lähde</button>' +
+    '<button class="action-btn flex items-center gap-1.5">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>Synkronoi kaikki</button></div></div>' +
+
+    // Summary cards
+    '<div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">' +
+
+    '<div class="card p-4"><div class="text-xs text-base-400 mb-1">Lähteitä yhteensä</div>' +
+    '<div class="hero-stat text-xl">' + dataSources.length + '</div></div>' +
+
+    '<div class="card p-4"><div class="text-xs text-base-400 mb-1">Aktiivisia</div>' +
+    '<div class="hero-stat text-xl text-ok-500">' + activeCount + '</div></div>' +
+
+    '<div class="card p-4"><div class="text-xs text-base-400 mb-1">Tauolla</div>' +
+    '<div class="hero-stat text-xl text-warn-500">' + pausedCount + '</div></div>' +
+
+    '<div class="card p-4"><div class="text-xs text-base-400 mb-1">Virheitä</div>' +
+    '<div class="hero-stat text-xl text-crit-500">' + errorCount + '</div></div>' +
+
+    '<div class="card p-4"><div class="text-xs text-base-400 mb-1">Osumia (24h)</div>' +
+    '<div class="hero-stat text-xl">' + totalHits + '</div></div>' +
+
+    '</div></div>';
+
+  // Group sources by category
+  var categories = {};
+  dataSources.forEach(function(s) {
+    if (!categories[s.category]) categories[s.category] = [];
+    categories[s.category].push(s);
+  });
+
+  var catOrder = ["Valtakunnallinen media","Alueellinen media","Talousmedia","Sosiaalinen media","Viralliset lähteet","Uutistoimistot"];
+
+  catOrder.forEach(function(cat, ci) {
+    if (!categories[cat]) return;
+    var sources = categories[cat];
+
+    html += '<div class="mb-6 animate-fade-up stagger-' + (ci + 2) + '">' +
+      '<div class="flex items-center gap-3 mb-3">' +
+      '<h3 class="text-sm font-semibold text-base-300 tracking-wide uppercase">' + cat + '</h3>' +
+      '<span class="text-xs text-base-500">' + sources.length + ' lähdettä</span>' +
+      '<div class="flex-1 h-px bg-base-800"></div></div>' +
+
+      '<div class="space-y-2">';
+
+    sources.forEach(function(s) {
+      var statusColor = s.status === 'active' ? 'bg-ok-500' : s.status === 'paused' ? 'bg-warn-500' : 'bg-crit-500';
+      var statusLabel = s.status === 'active' ? 'Aktiivinen' : s.status === 'paused' ? 'Tauolla' : 'Virhe';
+      var statusTextColor = s.status === 'active' ? 'text-ok-500' : s.status === 'paused' ? 'text-warn-500' : 'text-crit-500';
+
+      html += '<div class="card p-4">' +
+        '<div class="flex items-start gap-4">' +
+
+        // Status dot
+        '<div class="flex flex-col items-center gap-1 pt-0.5">' +
+        '<span class="w-2.5 h-2.5 rounded-full ' + statusColor + '"' + (s.status === 'active' ? ' style="animation:blink 3s infinite;"' : '') + '></span></div>' +
+
+        // Main info
+        '<div class="flex-1 min-w-0">' +
+        '<div class="flex items-center gap-2 mb-1">' +
+        '<span class="text-sm font-medium text-base-200">' + s.name + '</span>' +
+        '<span class="tag-pill bg-base-800 text-base-400">' + s.type + '</span>' +
+        '<span class="tag-pill ' + statusTextColor + ' bg-base-900/50">' + statusLabel + '</span></div>' +
+
+        '<div class="flex items-center gap-4 text-xs text-base-400 mb-2">' +
+        '<span class="font-mono">' + s.url + '</span>' +
+        '<span>Frekvenssi: <strong class="text-base-300">' + s.freq + '</strong></span>' +
+        '<span>Viimeisin haku: <strong class="text-base-300">' + s.lastFetch + '</strong></span>' +
+        '<span>Osumia 24h: <strong class="text-base-300">' + s.hits24h + '</strong></span></div>' +
+
+        // Filters/keywords
+        '<div class="flex flex-wrap gap-1.5">' +
+        '<span class="text-xs text-base-500 mr-1 leading-5">Suodattimet:</span>';
+
+      s.filters.forEach(function(f) {
+        html += '<span class="tag-pill bg-accent-600/15 text-accent-400">' + f + '</span>';
+      });
+
+      html += '<span class="tag-pill bg-base-800 text-base-500">+' + (s.keywords - s.filters.length) + ' avainsanaa</span>';
+
+      html += '</div></div>' +
+
+        // Actions
+        '<div class="flex flex-col gap-1.5 flex-shrink-0">' +
+        '<button class="action-btn text-[11px] whitespace-nowrap">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline -mt-px mr-0.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+        'Muokkaa</button>' +
+        '<button class="action-btn text-[11px] whitespace-nowrap">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline -mt-px mr-0.5"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>' +
+        'Hae nyt</button>' +
+        (s.status === 'active' ? '<button class="action-btn text-[11px] text-warn-500 whitespace-nowrap">Keskeytä</button>' :
+         s.status === 'paused' ? '<button class="action-btn text-[11px] text-ok-500 whitespace-nowrap">Aktivoi</button>' :
+         '<button class="action-btn text-[11px] text-crit-500 whitespace-nowrap">Yritä uudelleen</button>') +
+        '</div></div></div>';
+    });
+
+    html += '</div></div>';
+  });
+
+  // Global settings card
+  html += '<div class="animate-fade-up stagger-8">' +
+    '<div class="flex items-center gap-3 mb-3">' +
+    '<h3 class="text-sm font-semibold text-base-300 tracking-wide uppercase">Yleiset asetukset</h3>' +
+    '<div class="flex-1 h-px bg-base-800"></div></div>' +
+
+    '<div class="grid grid-cols-1 md:grid-cols-3 gap-3">' +
+
+    '<div class="card p-4">' +
+    '<div class="text-xs text-base-400 mb-2">Oletusfrekvenssi</div>' +
+    '<div class="flex items-center gap-2">' +
+    '<select class="bg-base-900 text-sm text-base-200 rounded-lg px-3 py-2 border border-base-700 outline-none w-full">' +
+    '<option>5 min</option><option>10 min</option><option selected>15 min</option><option>30 min</option><option>1 h</option><option>6 h</option><option>12 h</option><option>24 h</option></select></div>' +
+    '<p class="text-xs text-base-500 mt-2">Käytetään uusille lähteille oletuksena</p></div>' +
+
+    '<div class="card p-4">' +
+    '<div class="text-xs text-base-400 mb-2">Duplikaattisuodatus</div>' +
+    '<div class="flex items-center gap-3">' +
+    '<div class="w-10 h-5 rounded-full bg-ok-500 relative cursor-pointer"><div class="w-4 h-4 rounded-full bg-white absolute right-0.5 top-0.5 shadow"></div></div>' +
+    '<span class="text-sm text-base-300">Päällä</span></div>' +
+    '<p class="text-xs text-base-500 mt-2">Suodattaa automaattisesti samansisältöiset uutiset eri lähteistä</p></div>' +
+
+    '<div class="card p-4">' +
+    '<div class="text-xs text-base-400 mb-2">Sentimenttianalyysi</div>' +
+    '<div class="flex items-center gap-3">' +
+    '<div class="w-10 h-5 rounded-full bg-ok-500 relative cursor-pointer"><div class="w-4 h-4 rounded-full bg-white absolute right-0.5 top-0.5 shadow"></div></div>' +
+    '<span class="text-sm text-base-300">Automaattinen</span></div>' +
+    '<p class="text-xs text-base-500 mt-2">AI analysoi jokaisen osuman sävyn automaattisesti</p></div>' +
+
+    '</div></div>';
+
+  setStaticContent(container, html);
+  return container;
+}
+
 // ==================== INIT ====================
 var main = document.getElementById('mainContent');
 main.appendChild(renderDashboard());
@@ -858,6 +1030,7 @@ main.appendChild(renderPeople());
 main.appendChild(renderReports());
 main.appendChild(renderAlerts());
 main.appendChild(renderChat());
+main.appendChild(renderSources());
 
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(function(btn) {
